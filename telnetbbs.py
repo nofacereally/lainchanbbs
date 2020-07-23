@@ -10,7 +10,6 @@ from colors import *
 from formatter import PostFormatter
 
 from enum import Enum
-import time
 
 
 class BBSState(Enum):
@@ -23,6 +22,7 @@ class BBSState(Enum):
 
 class TelnetBBS(socketserver.BaseRequestHandler):
     chan_server = chanjson.ChanServer()
+    formatter = PostFormatter()
 
     def setup(self):
         self.state = BBSState.WELCOME
@@ -218,10 +218,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         for thread in threads:
             op = thread['posts'][0]
 
-            header = str(op['no']) + ' - ' + red(str(op['name']))
-
-            if 'sub' in op.keys():
-                header = header + ' - ' + str(op['sub'])
+            header = self.formatter.format_post_header(op)
 
             header = header + ', replies: ' + str(op['replies'])
 
@@ -252,8 +249,6 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         self.state = BBSState.THREADS
 
     def print_current_reply(self):
-        pf = PostFormatter()
-
         try:
             posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
         except:
@@ -272,13 +267,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         self.writeln(' ')
         self.writeln(blue('*-------------------------------*'))
 
-        header = str(post['no']) + ' - ' + red(str(post['name']))
-
-        if 'time' in post.keys():
-            epoch_ts = time.gmtime(int(post['time']))
-            formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", epoch_ts)
-
-            header = header + " - " + formatted_time
+        header = self.formatter.format_post_header(post)
 
         try:
             self.writeln(header)
@@ -297,7 +286,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
             self.writeln(' ')
 
         if 'com' in post.keys():
-            self.writeln(pf.format_post(strip_tags(post['com'])))
+            self.writeln(self.formatter.format_post(strip_tags(post['com'])))
 
         self.writeln(blue('*-------------------------------*'))
 
