@@ -6,7 +6,7 @@ from config import config
 import chanjson
 from htmlcleaner import strip_tags
 
-from colors import *
+from colors import color
 from formatter import PostFormatter
 
 from enum import Enum
@@ -23,6 +23,7 @@ class BBSState(Enum):
 class TelnetBBS(socketserver.BaseRequestHandler):
     chan_server = chanjson.ChanServer()
     formatter = PostFormatter()
+    logger = logging.getLogger('')
 
     def setup(self):
         self.state = BBSState.WELCOME
@@ -124,14 +125,15 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         self.writeresponse(prompt)
 
     def session_start(self):
-        logger = logging.getLogger('')
-        logger.info('Connections: A user has connected.')
+        self.logger.info('Connections: A user has connected.')
+
         if (config.offline_mode):
-            self.writeln(red('\n** OFFLINE MODE IS CURRENTLY ENABLED! **\n'))
+            self.writeln(
+                color('\n** OFFLINE MODE IS CURRENTLY ENABLED! **\n', fg='red')
+            )
 
     def session_end(self):
-        logger = logging.getLogger('')
-        logger.info('Connections: A user has disconnected.')
+        self.logger.info('Connections: A user has disconnected.')
 
     def command_listboards(self):
         '''
@@ -139,15 +141,12 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         '''
         data = self.chan_server.getBoards()
 
-        self.writeln(blue('*--------------------------------*'))
+        self.writehline()
 
         for board in data['boards']:
-            self.writeresponse(color(board['board'], fg='white', style='bold'))
-            self.writeresponse(' - ')
-            self.writeresponse(color(board['title'], fg='green'))
-            self.writeln('')
+            self.writeln(self.formatter.format_board_title(board))
 
-        self.writeln(blue('*--------------------------------*'))
+        self.writehline()
 
     def command_listthreads(self, params):
         '''<boardID>
@@ -158,21 +157,6 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         '''
         if (len(params) == 0):
             self.writeerror('Missing argument.')
-            return
-
-
-        try:
-            boards = self.chan_server.getBoards()['boards']
-
-            for board in boards:
-                if (params[0] == board['board']):
-                    board_info = board
-
-            pages = board_info['pages']
-        except:
-            logger = logging.getLogger('')
-            logger.error('Error: Failed to get board info: %s', str(params[0]))
-            self.writeerror('Communication error or invalid board ID...')
             return
 
         self.current_board = params[0]
@@ -213,7 +197,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         threads = thread_result['threads']
 
         self.writeln(' ')
-        self.writeln(blue('*-------------------------------*'))
+        self.writehline()
 
         for thread in threads:
             op = thread['posts'][0]
@@ -241,7 +225,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
 #                except:
 #                    pass
 
-        self.writeln(blue('*-------------------------------*'))
+        self.writehline()
         self.writeln(f'Page {self.current_page + 1}')
         self.writeln('')
 
@@ -251,7 +235,7 @@ class TelnetBBS(socketserver.BaseRequestHandler):
     def print_current_reply(self):
         try:
             posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
-        except:
+        except Exception:
             self.writeerror('Communication error or invalid board ID...')
             return
 
@@ -265,13 +249,13 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         post = posts[self.current_post]
 
         self.writeln(' ')
-        self.writeln(blue('*-------------------------------*'))
+        self.writehline()
 
         header = self.formatter.format_post_header(post)
 
         try:
             self.writeln(header)
-        except:
+        except Exception:
             pass
 
         if 'tim' in post.keys() and self.showImages:
@@ -288,7 +272,9 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         if 'com' in post.keys():
             self.writeln(self.formatter.format_post(strip_tags(post['com'])))
 
-        self.writeln(blue('*-------------------------------*'))
+        self.writehline()
 
         self.current_prompt = 'Enter - Next Post | q - Quit: '
 
+    def writehline(self):
+        self.writeln(color('*-------------------------------*', fg='blue'))

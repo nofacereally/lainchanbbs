@@ -1,4 +1,4 @@
-from colors import *
+from colors import color
 import time
 
 class PostFormatter():
@@ -20,7 +20,7 @@ class PostFormatter():
         return '\n'.join(self.out)
 
     def format_post_header(self, post):
-        header = str(post['no']) + ' - ' + red(str(post['name']))
+        header = str(post['no']) + ' - ' + color(str(post['name']), fg='red')
 
         if 'time' in post.keys():
             epoch_ts = time.gmtime(int(post['time']))
@@ -29,3 +29,9 @@ class PostFormatter():
             header = header + " - " + formatted_time
 
         return header
+
+    def format_board_title(self, board):
+        return "{} - {}".format(
+            color(board['board'], fg='white', style='bold'),
+            color(board['title'], fg='green')
+        )
