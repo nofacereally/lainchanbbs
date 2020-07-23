@@ -12,7 +12,7 @@ for users to browse 4chan via telnet and an old school BBS interface.
 Installation
 ------------
 
-The easiest way to setup 4Chan BBS is to install Python 3 and PIP. Run 
+The easiest way to setup Lainchan BBS is to install Python 3 and PIP. Run 
 `pip install -r requirements.txt` to get all the required libraries and then 
 start the server using `python Server.py`.
 
