@@ -258,14 +258,17 @@ class TelnetBBS(socketserver.BaseRequestHandler):
         except Exception:
             pass
 
-        if 'tim' in post.keys() and self.showImages:
-            self.writeln(' ')
-            img = self.chan_server.getThumbNail(self.current_board, post['tim'], ".png")
+        if 'tim' in post.keys():
+            if self.showImages:
+                self.writeln(' ')
+                img = self.chan_server.getThumbNail(self.current_board, post['tim'], '.png')
 
-            if img:
-                self.writeln(img)
+                if img:
+                    self.writeln(img)
+                else:
+                    self.writeln('<<IMAGE ERROR>>')
             else:
-                self.writeln('<<IMAGE ERROR>>')
+                self.writeln(self.chan_server.getThumbNailURL(self.current_board, post['tim'], '.png'))
 
             self.writeln(' ')
 

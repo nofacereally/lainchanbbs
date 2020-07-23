@@ -1,23 +1,23 @@
 from colors import color
 import time
 
+
 class PostFormatter():
 
-    def __init__(self):
-        self.out = []
-
     def format_post(self, text):
+        out = []
+
         lines = text.split('\n')
 
         for line in lines:
             if line.startswith('>>'):
-                self.out.append(color(line, style='bold', fg='white'))
+                out.append(color(line, style='bold', fg='white'))
             elif line.startswith('>'):
-                self.out.append(color(line, style='bold', fg='green'))
+                out.append(color(line, style='bold', fg='green'))
             else:
-                self.out.append(line)
+                out.append(line)
 
-        return '\n'.join(self.out)
+        return '\n'.join(out)
 
     def format_post_header(self, post):
         header = str(post['no']) + ' - ' + color(str(post['name']), fg='red')

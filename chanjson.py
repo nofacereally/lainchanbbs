@@ -80,7 +80,7 @@ class ChanServer:
         img = 'No Image'
 
         try:
-            url = f"{self.base_url}/{str(board)}/thumb/{str(imgID)}{ext}"
+            url = self.getThumbNailURL(board, imgID, ext)
 
             file = ascii_image.open_url(url)
 
@@ -90,6 +90,9 @@ class ChanServer:
             self.logger.error('Error: Failed to get image for %s', request)
 
         return img
+
+    def getThumbNailURL(self, board, imgID, ext):
+        return f"{self.base_url}/{str(board)}/thumb/{str(imgID)}{ext}"
 
     def queryApi(self, api_url):
         """Query the given API URL and cache the results with no TTL
