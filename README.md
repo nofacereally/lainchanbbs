@@ -1,42 +1,20 @@
 Live Server
 ===========
 
-(Offline due to lack of funds)
-telnet://bbs.carteryagemann.com
-
-4Chan BBS
-=========
+No live servers as of this moment, but you can clone and start it up yourself to run locally.
 
 About
 -----
 
-4Chan BBS is a Python project which allows users to browse the popular image board 
-4Chan through a telnet connection and command line interface.
-
-Why?
-----
-
-Do you remember the good old days of networked computing before GUI browsers existed?
-
-I don't, I'm too young.
-
-Regardless, I think it's time for old-school telnet BBS server to make a comeback. So 
-with that in mind, I made a BBS server for the popular image board 4Chan! The server 
-back-end communicates through 4Chan's API to provide real boards, threads, and posts 
-in real time and presents this data to the user through a command line interface. No 
-more pesky GUIs!
-
-4Chan BBS even supports images by converting them into a more CLI friendly ASCII string format!
+LainchanBBS is an evolution of the 4Chan BBS project. The original project allowed
+for users to browse 4chan via telnet and an old school BBS interface.
 
 Installation
 ------------
 
-The easiest way to setup 4Chan BBS is to install Python 2.7 and PIP. Run 
+The easiest way to setup 4Chan BBS is to install Python 3 and PIP. Run 
 `pip install -r requirements.txt` to get all the required libraries and then 
 start the server using `python Server.py`.
-
-If you get an error while trying to install Pillow, you may have to download some additonal
-libraries using a command like `sudo apt-get build-dep python-imaging`.
 
 Configuration
 -------------
