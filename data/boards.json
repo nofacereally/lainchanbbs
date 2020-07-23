@@ -1,0 +1,74 @@
+{
+    "boards": [
+        {
+            "board": "tech",
+            "title": "Technology",
+            "pages": 14
+        },
+        {
+            "board": "sec",
+            "title": "Security",
+            "pages": 14
+        },
+        {
+            "board": "diy",
+            "title": "Do It Yourself",
+            "pages": 14
+        },
+        {
+            "board": "lambda",
+            "title": "Programming",
+            "pages": 14
+        },
+        {
+            "board": "zzz",
+            "title": "Consciousness and Dreams",
+            "pages": 14
+        },
+        {
+            "board": "drug",
+            "title": "Drugs 3.0",
+            "pages": 14
+        },
+        {
+            "board": "vis",
+            "title": "Visual Media",
+            "pages": 14
+        },
+        {
+            "board": "music",
+            "title": "Musical and Audible Media",
+            "pages": 14
+        },
+        {
+            "board": "lit",
+            "title": "Literature",
+            "pages": 14
+        },
+        {
+            "board": "inter",
+            "title": "Games and Interactive Media",
+            "pages": 14
+        },
+        {
+            "board": "q",
+            "title": "Questions and Complaints",
+            "pages": 14
+        },
+        {
+            "board": "layer",
+            "title": "layer",
+            "pages": 14
+        },
+        {
+            "board": "r",
+            "title": "Random",
+            "pages": 14
+        },
+        {
+            "board": "hum",
+            "title": "Humor",
+            "pages": 14
+        }
+    ]
+}
