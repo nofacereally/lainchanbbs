@@ -106,11 +106,11 @@ class TelnetBBS(TelnetHandlerBase):
         TelnetHandlerBase.writemessage(self, text)
         self.IQUEUELOCK.release()
 
-    def writecooked(self, text, encoding='latin-1'):
+    def writecooked(self, text, encoding='utf-8'):
         """Put data directly into the output queue"""
         # Ensure this is the only thread writing
         self.OQUEUELOCK.acquire()
-        TelnetHandlerBase.writecooked(self, text, encoding)
+        TelnetHandlerBase.writecooked(self, text, 'utf-8')
         self.OQUEUELOCK.release()
 
     def writehline(self):
