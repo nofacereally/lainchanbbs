@@ -12,6 +12,13 @@ for users to browse 4chan via telnet and an old school BBS interface.
 Installation
 ------------
 
+ASCII Art Lib is required for image rendering to work.
+
+On Ubuntu:
+```
+> sudo apt install aalib1
+```
+
 The easiest way to setup Lainchan BBS is to install Python 3 and PIP. Run 
 `pip install -r requirements.txt` to get all the required libraries.
 
