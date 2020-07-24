@@ -137,10 +137,15 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.current_board = params[0]
 
+        print_page = True
+
         while True:
-            self.print_current_page()
+            if print_page:
+                self.print_current_page()
 
             command = self.readline(prompt='Enter - Next Page | p - Prev Page | Thread Number - Read Thread | q - Quit: ')
+
+            print_page = True
 
             if command.lower() == '':
                 self.current_page = self.current_page + 1
@@ -150,8 +155,13 @@ class TelnetBBS(TelnetHandlerBase):
                 self.PROMPT = config.prompt
                 break
             else:
-                self.current_thread = int(command)
-                self.read_replies()
+                try:
+                    self.current_thread = int(command)
+                    self.read_replies()
+                except ValueError:
+                    self.writeerror("Invalid thead number.")
+                    self.writeline("")
+                    print_page = False
 
     def read_replies(self):
         self.current_post = 0
