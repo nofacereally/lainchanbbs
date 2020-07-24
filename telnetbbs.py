@@ -1,13 +1,16 @@
-import socketserver
-# import threading
+import threading
+import time
+import select
 
-import logging
 from config import config
 import chanjson
-from htmlcleaner import strip_tags
-
 from colors import color
 from formatter import PostFormatter
+from htmlcleaner import strip_tags
+
+import logging
+
+from telnetsrvlib3.telnetsrv.telnetsrvlib import TelnetHandlerBase, command
 
 from enum import Enum
 
@@ -20,183 +23,201 @@ class BBSState(Enum):
     BYE = 5
 
 
-class TelnetBBS(socketserver.BaseRequestHandler):
+class TelnetBBS(TelnetHandlerBase):
+    WELCOME = config.welcome_message
+    PROMPT = config.prompt
+    CONTINUE_PROMPT = config.continue_prompt
+
     chan_server = chanjson.ChanServer()
     formatter = PostFormatter()
     logger = logging.getLogger('')
 
-    def setup(self):
-        self.state = BBSState.WELCOME
-
+    "A telnet server handler using Threading"
+    def __init__(self, request, client_address, server):
+        # BBS setup
         self.current_board = ""
         self.current_page = 0
         self.current_thread = 0
         self.current_post = 0
-        self.current_prompt = config.prompt
-
         self.showImages = False
 
-        self.session_start()
-        self.writeln(config.welcome_message)
-        self.current_prompt = config.continue_prompt
-        self.prompt()
+        # This is the cooked input stream (list of charcodes)
+        self.cookedq = []
 
-    def handle(self):
-        while True:
-            if self.state == BBSState.WELCOME:
-                self.state = BBSState.BASE
-                self.current_prompt = config.prompt
-                continue
+        # Create the locks for handing the input/output queues
+        self.IQUEUELOCK = threading.Lock()
+        self.OQUEUELOCK = threading.Lock()
 
-            command = str(self.request.recv(1024).strip(), 'utf-8').lower()
+        # Call the base class init method
+        TelnetHandlerBase.__init__(self, request, client_address, server)
 
-            splitted = command.split(" ")
-            params = []
+    def setup(self):
+        '''Called after instantiation'''
+        TelnetHandlerBase.setup(self)
+        # Spawn a thread to handle socket input
+        self.thread_ic = threading.Thread(target=self.inputcooker)
+        self.thread_ic.setDaemon(True)
+        self.thread_ic.start()
+        # Note that inputcooker exits on EOF
 
-            if len(splitted) > 1:
-                params = splitted[1:]
-
-            if self.state == BBSState.BASE:
-                if command == 'lb':
-                    self.command_listboards()
-                elif command.startswith('lt '):
-                    self.command_listthreads(params)
-                elif command == 'ei':
-                    self.showImages = True
-                    self.writeln("Images enabled.")
-                    self.writeln("")
-                elif command == 'di':
-                    self.showImages = False
-                    self.writeln("Images disabled.")
-                    self.writeln("")
-                elif command == 'bye':
-                    return
-                elif command == '':
-                    pass
-                else:
-                    self.writeln("Command not recognized.")
-            elif self.state == BBSState.THREADS:
-                if (command == 'q'):
-                    self.writeln('Exiting thread viewer.')
-                    self.writeln('')
-
-                    self.state = BBSState.BASE
-                    self.current_prompt = config.prompt
-                elif (command == ''):
-                    self.current_page = self.current_page + 1
-                    self.print_current_page()
-                elif (command == 'p'):
-                    self.current_page = self.current_page - 1
-                    self.print_current_page()
-                else:
-                    self.current_thread = int(command)
-                    self.state = BBSState.REPLIES
-                    self.print_current_reply()
-
-            elif self.state == BBSState.REPLIES:
-                if command == 'q':
-                    self.state = BBSState.THREADS
-                    self.current_post = 0
-                    self.print_current_page()
-                elif (command == ''):
-                    self.current_post = self.current_post + 1
-                    self.print_current_reply()
-
-            self.prompt()
+        # Sleep for 0.5 second to allow options negotiation
+        time.sleep(0.5)
 
     def finish(self):
-        self.writeln("Disconnecting from BBS...")
-        self.session_end()
+        '''Called as the session is ending'''
+        TelnetHandlerBase.finish(self)
+        # Might want to ensure the thread_ic is dead
 
-    def writeresponse(self, s):
-        byted = bytes(s, 'utf-8')
-        self.request.sendall(byted)
+    # -- Threaded input handling functions --
+    def getc(self, block=True):
+        """Return one character from the input queue"""
+        if not block:
+            if not len(self.cookedq):
+                return ''
+        while not len(self.cookedq):
+            time.sleep(0.05)
+        self.IQUEUELOCK.acquire()
+        ret = self.cookedq[0]
+        self.cookedq = self.cookedq[1:]
+        self.IQUEUELOCK.release()
+        return ret
 
-    def writeln(self, s):
-        self.writeresponse(f"{s}\n\r")
+    def inputcooker_socket_ready(self):
+        """Indicate that the socket is ready to be read"""
+        return select.select([self.sock.fileno()], [], [], 0) != ([], [], [])
 
-    def writeerror(self, s):
-        self.writeln(color(f"{s}", fg="red", style="bold"))
+    def inputcooker_store_queue(self, char):
+        """Put the cooked data in the input queue (with locking)"""
+        self.IQUEUELOCK.acquire()
+        if type(char) in [type(()), type([]), type("")]:
+            for v in char:
+                self.cookedq.append(v)
+        else:
+            self.cookedq.append(char)
+        self.IQUEUELOCK.release()
 
-    def prompt(self):
-        self.readline(self.current_prompt)
+    # -- Threaded output handling functions --
+    def writemessage(self, text):
+        """Put data in output queue, rebuild the prompt and entered data"""
+        # Need to grab the input queue lock to ensure the entered data doesn't change
+        # before we're done rebuilding it.
+        # Note that writemessage will eventually call writecooked
+        self.IQUEUELOCK.acquire()
+        TelnetHandlerBase.writemessage(self, text)
+        self.IQUEUELOCK.release()
 
-    def readline(self, prompt=config.prompt):
-        self.writeresponse(prompt)
+    def writecooked(self, text, encoding='latin-1'):
+        """Put data directly into the output queue"""
+        # Ensure this is the only thread writing
+        self.OQUEUELOCK.acquire()
+        TelnetHandlerBase.writecooked(self, text, encoding)
+        self.OQUEUELOCK.release()
 
-    def session_start(self):
-        self.logger.info('Connections: A user has connected.')
+    def writehline(self):
+        self.writeline(color('*-------------------------------*', fg='blue'))
 
-        if (config.offline_mode):
-            self.writeln(
-                color('\n** OFFLINE MODE IS CURRENTLY ENABLED! **\n', fg='red')
-            )
-
-    def session_end(self):
-        self.logger.info('Connections: A user has disconnected.')
-
-    def command_listboards(self):
-        '''
-        Lists available boards.
-        '''
+    @command(['listboards', 'lb'])
+    def command_listboards(self, params):
         data = self.chan_server.getBoards()
 
         self.writehline()
 
         for board in data['boards']:
-            self.writeln(self.formatter.format_board_title(board))
+            self.writeline(self.formatter.format_board_title(board))
 
         self.writehline()
 
+    @command(['listthreads', 'lt'])
     def command_listthreads(self, params):
-        '''<boardID>
-        Lists the threads in a given board.
-        Lists the threads in a given board.
-        Use listboards command to get the board's ID.
-        Example: 'lt a' will list all the treads on /a/.
-        '''
+        self.current_thread = 0
+
         if (len(params) == 0):
             self.writeerror('Missing argument.')
             return
 
         self.current_board = params[0]
-        self.print_current_page()
 
-    def command_getreplies(self):
-        '''<boardID> <threadID>
-        Lists the replies for a thread.
-        Lists the replies for a thread.
-        Use listboards and listthreads to get the IDs.
-        Example: 'gr a 1' will list the replies for the thread on /a/ with ID 1
-        '''
+        while True:
+            self.print_current_page()
 
-    def command_enableimages(self, params):
-        '''
-        Enables showing images in posts.
+            command = self.readline(prompt='Enter - Next Page | p - Prev Page | Thread Number - Read Thread | q - Quit: ')
 
-        '''
-        self.writeln("Images have been enabled.")
-        self.showImages = True
+            if command.lower() == '':
+                self.current_page = self.current_page + 1
+            elif command.lower() == 'p':
+                self.current_page = self.current_page - 1
+            elif command.lower() == 'q':
+                self.PROMPT = config.prompt
+                break
+            else:
+                self.current_thread = int(command)
+                self.read_replies()
 
-    def command_disableimages(self, params):
-        '''
-        Disables showing images in posts.
+    def read_replies(self):
+        self.current_post = 0
 
-        '''
-        self.writeln("Images have been disabled.")
-        self.showImages = False
+        try:
+            posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
+        except Exception:
+            self.writeerror('Communication error or invalid board ID...')
+            return
+
+        while True:
+            if self.current_post >= 0 and self.current_post < len(posts):
+                post = posts[self.current_post]
+
+                self.writeline(' ')
+                self.writehline()
+
+                header = self.formatter.format_post_header(post)
+
+                try:
+                    self.writeline(header)
+                except Exception:
+                    pass
+
+                if 'tim' in post.keys():
+                    if self.showImages:
+                        self.writeline(' ')
+                        img = self.chan_server.getThumbNail(self.current_board, post['tim'], '.png')
+
+                        if img:
+                            self.writeline(img)
+                        else:
+                            self.writeline('<<IMAGE ERROR>>')
+                    else:
+                        self.writeline(self.chan_server.getThumbNailURL(self.current_board, post['tim'], '.png'))
+
+                    self.writeline(' ')
+
+                if 'com' in post.keys():
+                    self.writeline(self.formatter.format_post(strip_tags(post['com'])))
+
+                self.writehline()
+            else:
+                self.writeline('End of posts.')
+                self.writeline('')
+
+            command = self.readline(prompt='Enter - Next Post | p - Prev Post | q - Quit: ')
+
+            if command.lower() == 'q':
+                break
+            elif command.lower() == '':
+                self.current_post = self.current_post + 1
+            elif command.lower() == 'p':
+                self.current_post = max(0, self.current_post - 1)
 
     def print_current_page(self):
         thread_result = self.chan_server.getThreads(self.current_board, self.current_page)
 
         if isinstance(thread_result, str):
-            self.writeln('End of threads.')
-            self.writeln('')
+            self.writeline('End of threads.')
+            self.writeline('')
             return
 
         threads = thread_result['threads']
 
-        self.writeln(' ')
+        self.writeline(' ')
         self.writehline()
 
         for thread in threads:
@@ -206,78 +227,26 @@ class TelnetBBS(socketserver.BaseRequestHandler):
 
             header = header + ', replies: ' + str(op['replies'])
 
-            self.writeln(header)
-
-#            if 'tim' in op.keys() and self.showImages:
-#                self.writeln(' ')
-#                img = self.chan_server.getThumbNail(board, op['tim'], ".png")
-#
-#                if img:
-#                    self.writeln(img)
-#                else:
-#                    self.writeln('<<IMG ERROR>>')
-#
-#                self.writeln(' ')
-#
-#            if 'com' in op.keys():
-#                try:
-#                    self.writeln(strip_tags(op['com']))
-#                except:
-#                    pass
+            self.writeline(header)
 
         self.writehline()
-        self.writeln(f'Page {self.current_page + 1}')
-        self.writeln('')
+        self.writeline(f'Page {self.current_page + 1}')
+        self.writeline('')
 
-        self.current_prompt = 'Enter - Next Page | p - Prev Page | Thread Number - Read Thread | q - Quit: '
-        self.state = BBSState.THREADS
+    @command(['enableimages', 'ei'])
+    def command_enableimages(self, params):
+        '''
+        Enables showing images in posts.
 
-    def print_current_reply(self):
-        try:
-            posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
-        except Exception:
-            self.writeerror('Communication error or invalid board ID...')
-            return
+        '''
+        self.writeline("Images have been enabled.")
+        self.showImages = True
 
-        if self.current_post >= len(posts):
-            self.writeln("End of posts.")
-            self.writeln('')
+    @command(['disableimages', 'di'])
+    def command_disableimages(self, params):
+        '''
+        Disables showing images in posts.
 
-            self.current_post = 0
-            return
-
-        post = posts[self.current_post]
-
-        self.writeln(' ')
-        self.writehline()
-
-        header = self.formatter.format_post_header(post)
-
-        try:
-            self.writeln(header)
-        except Exception:
-            pass
-
-        if 'tim' in post.keys():
-            if self.showImages:
-                self.writeln(' ')
-                img = self.chan_server.getThumbNail(self.current_board, post['tim'], '.png')
-
-                if img:
-                    self.writeln(img)
-                else:
-                    self.writeln('<<IMAGE ERROR>>')
-            else:
-                self.writeln(self.chan_server.getThumbNailURL(self.current_board, post['tim'], '.png'))
-
-            self.writeln(' ')
-
-        if 'com' in post.keys():
-            self.writeln(self.formatter.format_post(strip_tags(post['com'])))
-
-        self.writehline()
-
-        self.current_prompt = 'Enter - Next Post | q - Quit: '
-
-    def writehline(self):
-        self.writeln(color('*-------------------------------*', fg='blue'))
+        '''
+        self.writeline("Images have been disabled.")
+        self.showImages = False
