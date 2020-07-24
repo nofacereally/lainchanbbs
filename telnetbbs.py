@@ -10,7 +10,7 @@ from htmlcleaner import strip_tags
 
 import logging
 
-from telnetsrvlib3.telnetsrv.telnetsrvlib import TelnetHandlerBase, command
+from telnetsrv.telnetsrvlib import TelnetHandlerBase, command
 
 from enum import Enum
 

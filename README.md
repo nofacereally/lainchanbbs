@@ -13,8 +13,17 @@ Installation
 ------------
 
 The easiest way to setup Lainchan BBS is to install Python 3 and PIP. Run 
-`pip install -r requirements.txt` to get all the required libraries and then 
-start the server using `python Server.py`.
+`pip install -r requirements.txt` to get all the required libraries.
+
+Additionally, you need to build and install the telnet server library:
+
+```
+> git clone https://github.com/Blindfreddy/telnetsrvlib3.git
+> cd telnetsrvlib3
+> python setup.py install
+```
+
+Once installed, start the server using `python Server.py`.
 
 Configuration
 -------------
