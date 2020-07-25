@@ -72,20 +72,20 @@ class ChanServer:
 
         return data
 
-    def getThumbNail(self, board, imgID, ext, w=80, h=24):
+    def getThumbNail(self, board, imgID, ext, w=80, h=24, ar=0.61):
         # Get thumbnail for a post
         url = self.getThumbNailURL(board, imgID, ext)
 
-        return self.getAndConvertImage(url, w, h)
+        return self.getAndConvertImage(url, w, h, ar)
 
     @cached(cache=LRUCache(maxsize=100))
-    def getAndConvertImage(self, url, width=80, height=24):
+    def getAndConvertImage(self, url, width=80, height=24, ar=0.61):
         img = 'No Image'
 
         try:
             file = ascii_image.open_url(url)
 
-            img = ascii_image.convert_image(file, width, height)
+            img = ascii_image.convert_image(file, width, height, ar)
         except Exception as e:
             print(e)
             self.logger.error(f'Error: Failed to get image {url}')

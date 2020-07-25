@@ -6,7 +6,6 @@ from config import config
 import chanjson
 from colors import color
 from formatter import PostFormatter
-from htmlcleaner import strip_tags
 
 import logging
 
@@ -41,6 +40,7 @@ class TelnetBBS(TelnetHandlerBase):
         self.current_post = 0
         self.showImages = False
         self.encoding = "latin-1"
+        self.aspect_ratio = 0.61
 
         if config.welcome_banner is not None:
             self.WELCOME = self.chan_server.getAndConvertImage(config.welcome_banner, 80, 20)
@@ -266,7 +266,12 @@ class TelnetBBS(TelnetHandlerBase):
                 if 'tim' in post.keys():
                     self.writeresponse(
                         self.formatter.format_post_image(
-                            post, self.current_board, self.chan_server, self.WIDTH, self.HEIGHT
+                            post,
+                            self.current_board,
+                            self.chan_server,
+                            self.WIDTH,
+                            self.HEIGHT,
+                            self.aspect_ratio
                         )
                     )
                 else:
@@ -359,3 +364,35 @@ class TelnetBBS(TelnetHandlerBase):
         self.writeline("")
 
         self.showImages = False
+
+    @command(['aspectratio', 'ar'])
+    def command_aspectration(self, params):
+        if len(params) == 0:
+            self.writeresponse(f"Current aspect ratio: {self.aspect_ratio}")
+            self.writeresponse("")
+            return
+
+        if len(params) != 1:
+            self.writeerror("Missing aspect ratio.")
+            self.writeerror("")
+            return
+
+        try:
+            ar = float(params[0])
+
+            if ar < 0.0:
+                raise ValueError
+
+            if ar > 1.0:
+                raise ValueError
+        except ValueError:
+            self.writeerror("Invalid aspect ratio. Expected a value between 0.0 and 1.0.")
+            self.writeerror("")
+            return
+
+        self.aspect_ratio = ar
+
+        self.writeresponse(f"Aspect ratio set to {ar}.")
+        self.writeresponse("")
+
+        return

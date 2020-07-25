@@ -23,7 +23,7 @@ from PIL import Image
 import urllib
 
 
-def convert_image(img, x, y, scale_height=0.9):
+def convert_image(img, x, y, ar=0.61):
 
     if img.size[0] > x:
         scaled_w = abs(int(1 - (x / img.size[0] - 0.2) * img.size[0]))
@@ -35,7 +35,7 @@ def convert_image(img, x, y, scale_height=0.9):
     else:
         scaled_h = int(img.size[1])
 
-    scaled_h = int(scaled_h * scale_height)
+    scaled_w = int(scaled_w * ar)
 
     screen = aalib.LinuxScreen(width=scaled_w, height=scaled_h)
 

@@ -77,11 +77,11 @@ class PostFormatter():
     def get_hline(self, fg='blue', style=None):
         return color('*-------------------------------*', fg=fg, style=style)
 
-    def format_post_image(self, post, board, chan_server, w=80, h=24):
+    def format_post_image(self, post, board, chan_server, w=80, h=24, ar=0.61):
         lines = []
 
         if 'tim' in post.keys():
-            img = chan_server.getThumbNail(board, post['tim'], '.png', w, h)
+            img = chan_server.getThumbNail(board, post['tim'], '.png', w, h, ar)
 
             if img:
                 lines.append(img)
