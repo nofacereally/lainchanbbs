@@ -22,7 +22,10 @@ import logging
 
 class config:
 
-    welcome_banner = None
+    banners = [
+        "https://lainchan.org/static/lain_banner1.png",
+        "https://lainchan.org/static/lainchan_header_console.gif"
+    ]
 
     # Stock Messages
     welcome_message = '''\x1b[32;1m

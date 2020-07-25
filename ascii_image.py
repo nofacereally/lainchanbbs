@@ -24,12 +24,23 @@ import urllib
 
 
 def convert_image(img, x, y, ar=0.61):
-    scaled_w = abs(int(1 - (x / img.size[0]) * img.size[0]))
-    scaled_h = abs(int(1 - (y / img.size[1]) * img.size[1]))
+    y = y - 2 # account for prompt
 
-    scaled_w = int(scaled_w * ar)
+    img_w = img.size[0]
+    img_h = img.size[1]
 
-    screen = aalib.LinuxScreen(width=scaled_w, height=scaled_h)
+    if img_w > img_h:
+        ratio = img_h / img_w
+
+        final_w = x
+        final_h = min(y, ((y * ratio) + (y * ar)))
+    else:
+        ratio = img_w / img_h
+
+        final_w = min(x, x * ratio)
+        final_h = y
+
+    screen = aalib.LinuxScreen(width=int(final_w), height=int(final_h))
 
     img = img.convert('L').resize(screen.virtual_size)
 

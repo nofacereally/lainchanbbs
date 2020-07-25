@@ -42,10 +42,6 @@ class TelnetBBS(TelnetHandlerBase):
         self.encoding = "latin-1"
         self.aspect_ratio = 0.61
 
-        if config.welcome_banner is not None:
-            self.WELCOME = self.chan_server.getAndConvertImage(config.welcome_banner, 80, 20)
-            self.WELCOME = self.WELCOME + color(config.welcome_message, fg="green", style="bold")
-
         self.WELCOME = self.WELCOME + config.welcome_help_text
 
         # This is the cooked input stream (list of charcodes)
@@ -396,3 +392,24 @@ class TelnetBBS(TelnetHandlerBase):
         self.writeresponse("")
 
         return
+
+    @command(['banner', 'b'])
+    def command_banner(self, params):
+        index = 0
+
+        try:
+            index = int(params[0])
+        except Exception:
+            self.writeline("Not a valid number.")
+            self.writeline("")
+            return
+
+        try:
+            banner_url = config.banners[index]
+        except Exception:
+            self.writeline("Banner number is not known.")
+            self.writeline("")
+            return
+
+        self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
+        self.writeline("")
