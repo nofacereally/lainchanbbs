@@ -245,7 +245,7 @@ class TelnetBBS(TelnetHandlerBase):
 
             show_post = True
 
-            command = self.readline(prompt='Enter - Next Post | p - Prev Post | Space Delimited Post Numbers - View Posts | q - Quit: ')
+            command = self.readline(prompt='Enter - Next | p - Prev | Space Delimited Numbers - View | f/l - First/Last | q - Quit: ')
 
             if command.lower() == 'q':
                 break
@@ -259,6 +259,10 @@ class TelnetBBS(TelnetHandlerBase):
 
                 if self.current_post < 0:
                     show_post = False
+            elif command.lower() == 'f':
+                self.current_post = 0
+            elif command.lower() == 'l':
+                self.current_post = len(posts) - 1
             else:
                 try:
                     post_requests = command.split(' ')
