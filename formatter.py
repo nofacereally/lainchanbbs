@@ -58,18 +58,11 @@ class PostFormatter():
 
         if 'tim' in post.keys():
             if images:
-                lines.append('')
-
-                img = chan_server.getThumbNail(board, post['tim'], '.png')
-
-                if img:
-                    lines.append(img)
-                else:
-                    lines.append('<<IMAGE ERROR>>')
+                lines.append(self.format_post_image(post, board, chan_server))
             else:
                 lines.append(chan_server.getThumbNailURL(board, post['tim'], '.png'))
 
-            lines.append('')
+        lines.append("")
 
         if 'com' in post.keys():
             lines.append(self.format_post_comment(strip_tags(post['com'])))
@@ -83,3 +76,16 @@ class PostFormatter():
 
     def get_hline(self, fg='blue', style=None):
         return color('*-------------------------------*', fg=fg, style=style)
+
+    def format_post_image(self, post, board, chan_server):
+        lines = []
+
+        if 'tim' in post.keys():
+            img = chan_server.getThumbNail(board, post['tim'], '.png')
+
+            if img:
+                lines.append(img)
+            else:
+                lines.append('Unable to process image.')
+
+        return '\n\r'.join(lines)

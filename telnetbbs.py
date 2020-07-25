@@ -44,8 +44,7 @@ class TelnetBBS(TelnetHandlerBase):
 
         if config.welcome_banner is not None:
             self.WELCOME = self.chan_server.getAndConvertImage(config.welcome_banner, 80, 20)
-
-        self.WELCOME = self.WELCOME + color(config.welcome_message, fg="green", style="bold")
+            self.WELCOME = self.WELCOME + color(config.welcome_message, fg="green", style="bold")
 
         self.WELCOME = self.WELCOME + config.welcome_help_text
 
@@ -245,7 +244,7 @@ class TelnetBBS(TelnetHandlerBase):
 
             show_post = True
 
-            command = self.readline(prompt='Enter - Next | p - Prev | Space Delimited Numbers - View | f/l - First/Last | q - Quit: ')
+            command = self.readline(prompt='Enter - Next | p - Prev | Space Delimited Numbers - View | f/l - First/Last | i - Image | q - Quit: ')
 
             if command.lower() == 'q':
                 break
@@ -263,6 +262,19 @@ class TelnetBBS(TelnetHandlerBase):
                 self.current_post = 0
             elif command.lower() == 'l':
                 self.current_post = len(posts) - 1
+            elif command.lower() == 'i':
+                if 'tim' in post.keys():
+                    self.writeresponse(
+                        self.formatter.format_post_image(
+                            post, self.current_board, self.chan_server
+                        )
+                    )
+                else:
+                    self.writeline("There is no image on this post.")
+
+                self.writeresponse("")
+
+                show_post = False
             else:
                 try:
                     post_requests = command.split(' ')
