@@ -24,16 +24,8 @@ import urllib
 
 
 def convert_image(img, x, y, ar=0.61):
-
-    if img.size[0] > x:
-        scaled_w = abs(int(1 - (x / img.size[0] - 0.2) * img.size[0]))
-    else:
-        scaled_w = int(img.size[0])
-
-    if img.size[1] > y:
-        scaled_h = abs(int(1 - (y / img.size[1]) * img.size[1]))
-    else:
-        scaled_h = int(img.size[1])
+    scaled_w = abs(int(1 - (x / img.size[0]) * img.size[0]))
+    scaled_h = abs(int(1 - (y / img.size[1]) * img.size[1]))
 
     scaled_w = int(scaled_w * ar)
 
