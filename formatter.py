@@ -20,10 +20,12 @@ class PostFormatter():
         return '\n'.join(out)
 
     def format_post_header(self, post):
-        header = str(post['no']) + ' - ' + color(str(post['name']), fg='red')
+        header = str(post['no'])
 
         if 'sub' in post.keys():
-            header = header + " - " + post['sub']
+            header = header + " - " + color(post['sub'], fg='cyan', style='bold')
+
+        header = header + ' - ' + color(str(post['name']), fg='red')
 
         if 'time' in post.keys():
             epoch_ts = time.gmtime(int(post['time']))
