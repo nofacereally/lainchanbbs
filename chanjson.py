@@ -22,6 +22,7 @@ import requests
 import ascii_image
 import logging
 from config import config
+from cachetools import cached, TTLCache
 
 
 class ChanServer:
@@ -29,7 +30,6 @@ class ChanServer:
         self.base_url = 'https://lainchan.org'
         self.logger = logging.getLogger('')
         self.boards = None
-        self.cache = {}
 
     # Gets all the boards
     def getBoards(self):
@@ -94,8 +94,9 @@ class ChanServer:
     def getThumbNailURL(self, board, imgID, ext):
         return f"{self.base_url}/{str(board)}/thumb/{str(imgID)}{ext}"
 
+    @cached(cache=TTLCache(maxsize=1024, ttl=120))
     def queryApi(self, api_url):
-        """Query the given API URL and cache the results with no TTL
+        """Query the given API URL and cache the results with TTL
 
         :param str api_url
             The API URL to query. Responses are expected to be JSON.
@@ -104,9 +105,6 @@ class ChanServer:
         :rtype
             dict
         """
-        if api_url in self.cache.keys():
-            return self.cache[api_url]
-
         response = requests.get(url=api_url)
 
         if response.status_code != 200:
@@ -114,6 +112,4 @@ class ChanServer:
 
         data = json.loads(response.text)
 
-        self.cache[api_url] = data
-
-        return self.cache[api_url]
+        return data
