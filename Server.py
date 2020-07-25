@@ -17,31 +17,24 @@
 #    See <http://www.gnu.org/licenses/> for a full copy of the license.
 #
 
-## Imports
-##----------------------------------------------
+# Imports
 import socketserver
-import threading
 
 import logging
-from telnetlib import Telnet
 from config import config
-import chanjson
-from htmlcleaner import strip_tags
 from telnetbbs import TelnetBBS
 
-## Logging Configuration
-##----------------------------------------------
+# Logging Configuration
 FORMAT = '[%(asctime)-15s] %(message)s'
 logging.basicConfig(format=FORMAT)
 
-## TCP Server
-##----------------------------------------------
+
+# TCP Server
 class TelnetServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
 
 
-## Main
-##----------------------------------------------
+# Main
 logger = logging.getLogger('')
 logger.setLevel(config.loggingLevel)
 

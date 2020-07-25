@@ -24,7 +24,8 @@ import urllib
 
 
 def convert_image(img, x, y, ar=0.61):
-    y = y - 2 # account for prompt
+    # account for prompt
+    y = y - 2
 
     img_w = img.size[0]
     img_h = img.size[1]

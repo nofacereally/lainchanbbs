@@ -4,7 +4,6 @@ import select
 
 from config import config
 import chanjson
-from colors import color
 from formatter import PostFormatter
 
 import logging
@@ -306,7 +305,6 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeerror("Invalid post number.")
                     self.writeerror("")
                     show_post = False
-
 
     def print_current_page(self):
         try:
