@@ -266,7 +266,7 @@ class TelnetBBS(TelnetHandlerBase):
                 if 'tim' in post.keys():
                     self.writeresponse(
                         self.formatter.format_post_image(
-                            post, self.current_board, self.chan_server
+                            post, self.current_board, self.chan_server, self.WIDTH, self.HEIGHT
                         )
                     )
                 else:
