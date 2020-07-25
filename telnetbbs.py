@@ -161,7 +161,7 @@ class TelnetBBS(TelnetHandlerBase):
             if print_page:
                 self.print_current_page()
 
-            command = self.readline(prompt='Enter - Next Page | p - Prev Page | Thread Number - Read Thread | q - Quit: ')
+            command = self.readline(prompt='Enter - Next | p - Prev | Thread Number - Read | q - Quit: ')
 
             print_page = True
 
