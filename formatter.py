@@ -1,22 +1,29 @@
 from colors import color
 import time
 from htmlcleaner import strip_tags
+from textwrap import wrap
 
 
 class PostFormatter():
 
-    def format_post_comment(self, text):
+    def format_post_comment(self, text, wrap_width=80):
         out = []
 
         lines = text.split('\n')
 
         for line in lines:
             if line.startswith('>>'):
-                out.append(color(line, style='bold', fg='white'))
+                out_line = color(line, style='bold', fg='white')
             elif line.startswith('>'):
-                out.append(color(line, style='bold', fg='green'))
+                out_line = color(line, style='bold', fg='green')
             else:
-                out.append(line)
+                out_line = line
+
+            lines_to_add = wrap(out_line, width=wrap_width)
+
+            final_l = '\n\r'.join(lines_to_add)
+
+            out.append(final_l)
 
         return '\n'.join(out)
 
@@ -42,7 +49,7 @@ class PostFormatter():
             color(board['title'], fg='green')
         )
 
-    def format_post(self, post, board, chan_server, images=False, hline_color='blue', hline_style=None):
+    def format_post(self, post, board, chan_server, images=False, hline_color='blue', hline_style=None, text_width=80):
         lines = []
 
         lines.append('')
@@ -65,7 +72,7 @@ class PostFormatter():
         lines.append("")
 
         if 'com' in post.keys():
-            lines.append(self.format_post_comment(strip_tags(post['com'])))
+            lines.append(self.format_post_comment(strip_tags(post['com']), text_width))
 
         lines.append(self.get_hline(
             fg=hline_color,

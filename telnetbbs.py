@@ -233,7 +233,10 @@ class TelnetBBS(TelnetHandlerBase):
                         post,
                         self.current_board,
                         self.chan_server,
-                        self.showImages
+                        self.showImages,
+                        'blue',
+                        None,
+                        self.WIDTH
                     )
                 )
 
@@ -292,7 +295,9 @@ class TelnetBBS(TelnetHandlerBase):
                                     self.current_board,
                                     self.chan_server,
                                     self.showImages,
-                                    'yellow'
+                                    'yellow',
+                                    None,
+                                    self.WIDTH
                                 )
                             )
                         except Exception:
