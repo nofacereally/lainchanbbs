@@ -1,10 +1,11 @@
 from colors import color
 import time
+from htmlcleaner import strip_tags
 
 
 class PostFormatter():
 
-    def format_post(self, text):
+    def format_post_comment(self, text):
         out = []
 
         lines = text.split('\n')
@@ -40,3 +41,45 @@ class PostFormatter():
             color(board['board'], fg='white', style='bold'),
             color(board['title'], fg='green')
         )
+
+    def format_post(self, post, board, chan_server, images=False, hline_color='blue', hline_style=None):
+        lines = []
+
+        lines.append('')
+
+        lines.append(self.get_hline(
+            fg=hline_color,
+            style=hline_style
+        ))
+
+        header = self.format_post_header(post)
+
+        lines.append(header)
+
+        if 'tim' in post.keys():
+            if images:
+                lines.append('')
+
+                img = chan_server.getThumbNail(board, post['tim'], '.png')
+
+                if img:
+                    lines.append(img)
+                else:
+                    lines.append('<<IMAGE ERROR>>')
+            else:
+                lines.append(chan_server.getThumbNailURL(board, post['tim'], '.png'))
+
+            lines.append('')
+
+        if 'com' in post.keys():
+            lines.append(self.format_post_comment(strip_tags(post['com'])))
+
+        lines.append(self.get_hline(
+            fg=hline_color,
+            style=hline_style
+        ))
+
+        return '\n\r'.join(lines)
+
+    def get_hline(self, fg='blue', style=None):
+        return color('*-------------------------------*', fg=fg, style=style)

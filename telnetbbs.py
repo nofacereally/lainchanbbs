@@ -124,7 +124,7 @@ class TelnetBBS(TelnetHandlerBase):
         self.OQUEUELOCK.release()
 
     def writehline(self):
-        self.writeline(color('*-------------------------------*', fg='blue'))
+        self.writeline(self.formatter.get_hline('blue'))
 
     @command(['listboards', 'lb'])
     def command_listboards(self, params):
@@ -234,40 +234,18 @@ class TelnetBBS(TelnetHandlerBase):
             if show_post:
                 post = posts[self.current_post]
 
-                self.writeline(' ')
-                self.writehline()
-
-                header = self.formatter.format_post_header(post)
-
-                try:
-                    self.writeline(header)
-                except Exception:
-                    pass
-
-                if 'tim' in post.keys():
-                    if self.showImages:
-                        self.writeline(' ')
-
-                        img = self.chan_server.getThumbNail(self.current_board, post['tim'], '.png')
-
-                        if img:
-                            self.writeline(img)
-                        else:
-                            self.writeline('<<IMAGE ERROR>>')
-                    else:
-                        self.writeline(self.chan_server.getThumbNailURL(self.current_board, post['tim'], '.png'))
-
-                    self.writeline(' ')
-
-                if 'com' in post.keys():
-                    self.writeline(self.formatter.format_post(strip_tags(post['com'])))
-
-                self.writehline()
-                self.writeline("")
+                self.writeresponse(
+                    self.formatter.format_post(
+                        post,
+                        self.current_board,
+                        self.chan_server,
+                        self.showImages
+                    )
+                )
 
             show_post = True
 
-            command = self.readline(prompt='Enter - Next Post | p - Prev Post | q - Quit: ')
+            command = self.readline(prompt='Enter - Next Post | p - Prev Post | Space Delimited Post Numbers - View Posts | q - Quit: ')
 
             if command.lower() == 'q':
                 break
@@ -281,6 +259,37 @@ class TelnetBBS(TelnetHandlerBase):
 
                 if self.current_post < 0:
                     show_post = False
+            else:
+                try:
+                    post_requests = command.split(' ')
+
+                    for req in post_requests:
+                        post_request = int(req)
+
+                        try:
+                            g = (i for i, e in enumerate(posts) if e['no'] == post_request)
+                            post_index = next(g)
+
+                            self.writeresponse(
+                                self.formatter.format_post(
+                                    posts[post_index],
+                                    self.current_board,
+                                    self.chan_server,
+                                    self.showImages,
+                                    'yellow'
+                                )
+                            )
+                        except Exception:
+                            self.writeerror("Post number not found.")
+                            self.writeerror("")
+                            show_post = False
+                            break
+
+                except ValueError:
+                    self.writeerror("Invalid post number.")
+                    self.writeerror("")
+                    show_post = False
+
 
     def print_current_page(self):
         try:
