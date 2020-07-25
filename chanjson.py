@@ -22,20 +22,17 @@ import requests
 import ascii_image
 import logging
 from config import config
-from cachetools import cached, TTLCache
+from cachetools import cached, TTLCache, LRUCache
 
 
 class ChanServer:
     def __init__(self):
         self.base_url = 'https://lainchan.org'
         self.logger = logging.getLogger('')
-        self.boards = None
 
-    # Gets all the boards
+    @cached(cache=TTLCache(maxsize=1024, ttl=60))
     def getBoards(self):
-        if self.boards is not None:
-            return self.boards
-
+        # Gets all the boards
         if len(config.board_list) > 0:
             logging.info(f"File {config.board_list} used for board list.")
 
@@ -49,8 +46,8 @@ class ChanServer:
 
         return self.boards
 
-    # Get a page of threads from a board
     def getThreads(self, board, page):
+        # Get a page of threads from a board
         data = ''
 
         try:
@@ -62,8 +59,8 @@ class ChanServer:
 
         return data
 
-    # Get posts for a particular thread
     def getReplies(self, board, thread):
+        # Get posts for a particular thread
         data = ''
 
         try:
@@ -75,8 +72,9 @@ class ChanServer:
 
         return data
 
-    # Get thumbnail for a post
+    @cached(cache=LRUCache(maxsize=100))
     def getThumbNail(self, board, imgID, ext):
+        # Get thumbnail for a post
         img = 'No Image'
 
         try:
