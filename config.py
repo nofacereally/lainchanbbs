@@ -24,7 +24,8 @@ class config:
 
     banners = [
         "https://lainchan.org/static/lain_banner1.png",
-        "https://lainchan.org/static/lainchan_header_console.gif"
+        "https://lainchan.org/static/lainchan_header_console.gif",
+        "https://lainchan.org/static/turtle.png"
     ]
 
     # Stock Messages
