@@ -23,7 +23,7 @@ from PIL import Image
 import urllib
 
 
-def convert_image(img, x, y, scale_height=0.7):
+def convert_image(img, x, y, scale_height=0.9):
 
     if img.size[0] > x:
         scaled_w = abs(int(1 - (x / img.size[0] - 0.2) * img.size[0]))
