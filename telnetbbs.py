@@ -5,6 +5,7 @@ import select
 from config import config
 import chanjson
 from formatter import PostFormatter
+from colors import color
 
 import logging
 
@@ -137,6 +138,14 @@ class TelnetBBS(TelnetHandlerBase):
 
         if (len(params) == 0):
             self.writeerror('Missing argument.')
+            self.writeerror('')
+            return
+
+        board = params[0]
+
+        if not self.is_valid_board(board):
+            self.writeerror('That board is not known.')
+            self.writeerror('')
             return
 
         self.current_board = params[0]
@@ -155,7 +164,7 @@ class TelnetBBS(TelnetHandlerBase):
             if print_page:
                 self.print_current_page()
 
-            command = self.readline(prompt='Enter - Next | p - Prev | Thread Number - Read | q - Quit: ')
+            command = self.readline(prompt='(enter) next, (p)rev, # read, (q)uit: ')
 
             print_page = True
 
@@ -192,7 +201,14 @@ class TelnetBBS(TelnetHandlerBase):
                 self.writeerror("")
                 return
 
-            self.current_board = params[0]
+            board = params[0]
+
+            if not self.is_valid_board(board):
+                self.writeerror("That board is not known.")
+                self.writeerror("")
+                return
+
+            self.current_board = board
 
             try:
                 self.current_thread = int(params[1])
@@ -242,7 +258,7 @@ class TelnetBBS(TelnetHandlerBase):
 
             show_post = True
 
-            command = self.readline(prompt='Enter - Next | p - Prev | Space Delimited Numbers - View | f/l - First/Last | i - Image | q - Quit: ')
+            command = self.readline(prompt='(enter) next, (p)rev, (# #..) view threads, (f)irst, (l)ast, (i)mage, (q)uit: ')
 
             if command.lower() == 'q':
                 break
@@ -334,7 +350,12 @@ class TelnetBBS(TelnetHandlerBase):
 
             header = self.formatter.format_post_header(op)
 
-            header = header + ', replies: ' + str(op['replies'])
+            header = header + ' {}{}{}{}'.format(
+                color("r", fg='cyan'),
+                color("[", fg='blue', style='bold'),
+                color(op['replies'], fg='yellow', style='bold'),
+                color("]", fg='blue', style='bold')
+            )
 
             self.writeline(header)
 
@@ -416,3 +437,10 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
         self.writeline("")
+
+    def is_valid_board(self, board):
+        data = self.chan_server.getBoards()
+
+        board_names = [b['board'] for b in data['boards']]
+
+        return board.lower() in board_names

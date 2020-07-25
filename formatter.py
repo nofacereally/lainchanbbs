@@ -37,7 +37,7 @@ class PostFormatter():
 
         if 'time' in post.keys():
             epoch_ts = time.gmtime(int(post['time']))
-            formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", epoch_ts)
+            formatted_time = time.strftime("%Y-%m-%d %H:%M", epoch_ts)
 
             header = header + " - " + formatted_time
 

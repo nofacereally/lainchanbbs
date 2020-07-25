@@ -49,12 +49,10 @@ e     eeeee e  eeeee eeee e   e eeeee eeeee\x1b[31;1m 8    8   8    8   8     \x
 8e    8eee8 8e 8e  8 8e   8eee8 8eee8 8e  8\x1b[31;1m 88     8 88     8     88\x1b[32;1m
 88    88  8 88 88  8 88   88  8 88  8 88  8\x1b[31;1m 88     8 88     8 e   88\x1b[32;1m
 88eee 88  8 88 88  8 88e8 88  8 88  8 88  8\x1b[31;1m 88eeeee8 88eeeee8 8eee88\x1b[32;1m
-                             "Partially works!"
-\x1b[0m
+                             "Partially works!\x1b[0m
 '''
 
-    welcome_help_text = '''
-For help, type help. For additional help, try help <command>.
+    welcome_help_text = '''For help, type help. For additional help, try help <command>.
 '''
     prompt = "lainchanbbs> "
     continue_prompt = "Press any key to continue..."
