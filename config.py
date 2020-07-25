@@ -38,9 +38,9 @@ class config:
 
     welcome_help_text = '''
 New to the server? Here's a quick guide:
-        b                      - List all the available boards
-        t <boardID>            - List the threads for a board
-        ei/di                  - Enable/Disable the showing of images
+       lb                      - List all the available boards
+       lt <boardID>            - List the threads for a board
+       ei/di                   - Enable/Disable the showing of images
 
 If you need additional help or examples, try help <command>.
 '''
