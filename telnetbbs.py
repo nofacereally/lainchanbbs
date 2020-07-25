@@ -40,6 +40,7 @@ class TelnetBBS(TelnetHandlerBase):
         self.current_thread = 0
         self.current_post = 0
         self.showImages = False
+        self.encoding = "latin-1"
 
         # This is the cooked input stream (list of charcodes)
         self.cookedq = []
@@ -62,6 +63,8 @@ class TelnetBBS(TelnetHandlerBase):
 
         # Sleep for 0.5 second to allow options negotiation
         time.sleep(0.5)
+
+        self.encoding = "utf-8"
 
     def finish(self):
         '''Called as the session is ending'''
@@ -106,11 +109,11 @@ class TelnetBBS(TelnetHandlerBase):
         TelnetHandlerBase.writemessage(self, text)
         self.IQUEUELOCK.release()
 
-    def writecooked(self, text, encoding='utf-8'):
+    def writecooked(self, text, encoding='latin-1'):
         """Put data directly into the output queue"""
         # Ensure this is the only thread writing
         self.OQUEUELOCK.acquire()
-        TelnetHandlerBase.writecooked(self, text, 'utf-8')
+        TelnetHandlerBase.writecooked(self, text, self.encoding)
         self.OQUEUELOCK.release()
 
     def writehline(self):
@@ -151,6 +154,13 @@ class TelnetBBS(TelnetHandlerBase):
                 self.current_page = self.current_page + 1
             elif command.lower() == 'p':
                 self.current_page = self.current_page - 1
+
+                if self.current_page < 0:
+                    self.writeerror("No more threads.")
+                    self.writeerror("")
+                    self.current_page = 0
+                    print_page = False
+
             elif command.lower() == 'q':
                 self.PROMPT = config.prompt
                 break
@@ -172,8 +182,25 @@ class TelnetBBS(TelnetHandlerBase):
             self.writeerror('Communication error or invalid board ID...')
             return
 
+        show_post = True
+
         while True:
-            if self.current_post >= 0 and self.current_post < len(posts):
+            error = False
+
+            if self.current_post < 0:
+                self.current_post = 0
+                error = True
+
+            if self.current_post >= len(posts):
+                self.current_post = len(posts) - 1
+                error = True
+
+            if error:
+                self.writeerror("No more posts.")
+                self.writeerror("")
+                continue
+
+            if show_post:
                 post = posts[self.current_post]
 
                 self.writeline(' ')
@@ -204,9 +231,8 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeline(self.formatter.format_post(strip_tags(post['com'])))
 
                 self.writehline()
-            else:
-                self.writeline('End of posts.')
-                self.writeline('')
+
+            show_post = True
 
             command = self.readline(prompt='Enter - Next Post | p - Prev Post | q - Quit: ')
 
@@ -214,8 +240,14 @@ class TelnetBBS(TelnetHandlerBase):
                 break
             elif command.lower() == '':
                 self.current_post = self.current_post + 1
+
+                if self.current_post >= len(posts):
+                    show_post = False
             elif command.lower() == 'p':
-                self.current_post = max(0, self.current_post - 1)
+                self.current_post = self.current_post - 1
+
+                if self.current_post < 0:
+                    show_post = False
 
     def print_current_page(self):
         thread_result = self.chan_server.getThreads(self.current_board, self.current_page)
@@ -250,6 +282,8 @@ class TelnetBBS(TelnetHandlerBase):
 
         '''
         self.writeline("Images have been enabled.")
+        self.writeline("")
+
         self.showImages = True
 
     @command(['disableimages', 'di'])
@@ -259,4 +293,6 @@ class TelnetBBS(TelnetHandlerBase):
 
         '''
         self.writeline("Images have been disabled.")
+        self.writeline("")
+
         self.showImages = False
