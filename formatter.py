@@ -22,6 +22,9 @@ class PostFormatter():
     def format_post_header(self, post):
         header = str(post['no']) + ' - ' + color(str(post['name']), fg='red')
 
+        if 'sub' in post.keys():
+            header = header + " - " + post['sub']
+
         if 'time' in post.keys():
             epoch_ts = time.gmtime(int(post['time']))
             formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", epoch_ts)
