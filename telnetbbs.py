@@ -140,6 +140,14 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.current_board = params[0]
 
+        if (len(params) > 1):
+            try:
+                self.current_page = int(params[1]) - 1
+            except ValueError:
+                self.writeerror("Invalid page number.")
+                self.writeerror("")
+                return
+
         print_page = True
 
         while True:
@@ -173,13 +181,29 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeline("")
                     print_page = False
 
-    def read_replies(self):
+    @command(['readreplies', 'rr'])
+    def read_replies(self, params=None):
         self.current_post = 0
+
+        if params is not None:
+            if len(params) < 2:
+                self.writeerror("Board name and thread number are required.")
+                self.writeerror("")
+                return
+
+            self.current_board = params[0]
+
+            try:
+                self.current_thread = int(params[1])
+            except ValueError:
+                self.writeerror("Invalid thread number.")
+                self.writeerror("")
+                return
 
         try:
             posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
         except Exception:
-            self.writeerror('Communication error or invalid board ID...')
+            self.writeerror('Communication error or invalid board and/or thread number.')
             return
 
         show_post = True
@@ -216,6 +240,7 @@ class TelnetBBS(TelnetHandlerBase):
                 if 'tim' in post.keys():
                     if self.showImages:
                         self.writeline(' ')
+
                         img = self.chan_server.getThumbNail(self.current_board, post['tim'], '.png')
 
                         if img:
@@ -231,6 +256,7 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeline(self.formatter.format_post(strip_tags(post['com'])))
 
                 self.writehline()
+                self.writeline("")
 
             show_post = True
 
@@ -250,10 +276,15 @@ class TelnetBBS(TelnetHandlerBase):
                     show_post = False
 
     def print_current_page(self):
-        thread_result = self.chan_server.getThreads(self.current_board, self.current_page)
+        try:
+            thread_result = self.chan_server.getThreads(self.current_board, self.current_page)
+        except Exception:
+            self.writeerror('Communication error or invalid board and/or thread number.')
+            self.writeerror("")
+            return
 
         if isinstance(thread_result, str):
-            self.writeline('End of threads.')
+            self.writeline('No more threads or bad thread number.')
             self.writeline('')
             return
 
