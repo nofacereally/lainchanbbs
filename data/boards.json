@@ -2,73 +2,59 @@
     "boards": [
         {
             "board": "tech",
-            "title": "Technology",
-            "pages": 14
+            "title": "Technology"
         },
         {
             "board": "sec",
-            "title": "Security",
-            "pages": 14
+            "title": "Security"
         },
         {
             "board": "diy",
-            "title": "Do It Yourself",
-            "pages": 14
+            "title": "Do It Yourself"
         },
         {
             "board": "lambda",
-            "title": "Programming",
-            "pages": 14
+            "title": "Programming"
         },
         {
             "board": "zzz",
-            "title": "Consciousness and Dreams",
-            "pages": 14
+            "title": "Consciousness and Dreams"
         },
         {
             "board": "drug",
-            "title": "Drugs 3.0",
-            "pages": 14
+            "title": "Drugs 3.0"
         },
         {
             "board": "vis",
-            "title": "Visual Media",
-            "pages": 14
+            "title": "Visual Media"
         },
         {
             "board": "music",
-            "title": "Musical and Audible Media",
-            "pages": 14
+            "title": "Musical and Audible Media"
         },
         {
             "board": "lit",
-            "title": "Literature",
-            "pages": 14
+            "title": "Literature"
         },
         {
             "board": "inter",
-            "title": "Games and Interactive Media",
-            "pages": 14
+            "title": "Games and Interactive Media"
         },
         {
             "board": "q",
-            "title": "Questions and Complaints",
-            "pages": 14
+            "title": "Questions and Complaints"
         },
         {
             "board": "layer",
-            "title": "layer",
-            "pages": 14
+            "title": "layer"
         },
         {
             "board": "r",
-            "title": "Random",
-            "pages": 14
+            "title": "Random"
         },
         {
             "board": "hum",
-            "title": "Humor",
-            "pages": 14
+            "title": "Humor"
         }
     ]
 }
