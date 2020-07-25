@@ -42,6 +42,13 @@ class TelnetBBS(TelnetHandlerBase):
         self.showImages = False
         self.encoding = "latin-1"
 
+        if config.welcome_banner is not None:
+            self.WELCOME = self.chan_server.getAndConvertImage(config.welcome_banner, 80, 20)
+
+        self.WELCOME = self.WELCOME + color(config.welcome_message, fg="green", style="bold")
+
+        self.WELCOME = self.WELCOME + config.welcome_help_text
+
         # This is the cooked input stream (list of charcodes)
         self.cookedq = []
 

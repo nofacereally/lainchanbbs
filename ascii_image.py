@@ -24,7 +24,7 @@ import urllib
 
 
 def convert_image(img, x, y):
-    screen = aalib.AsciiScreen(width=x, height=y)
+    screen = aalib.LinuxScreen(width=x, height=y)
     img = img.convert('L').resize(screen.virtual_size)
     screen.put_image((0, 0), img)
     return screen.render()

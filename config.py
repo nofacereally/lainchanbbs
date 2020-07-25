@@ -19,50 +19,41 @@
 
 import logging
 
+
 class config:
 
-    ## Stock Messages
-    ##-----------------------------------
-    welcome_message = '''\x1b[31;1m
- __          __  _                            _             
- \ \        / / | |                          | |            
-  \ \  /\  / /__| | ___ ___  _ __ ___   ___  | |_ ___       
-   \ \/  \/ / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \      
-    \  /\  /  __/ | (_| (_) | | | | | |  __/ | || (_) | _ _ 
-     \/  \/ \___|_|\___\___/|_| |_| |_|\___|  \__\___(_|_|_) \x1b[0m
-\x1b[32;1m
-                                                                   
-          _____ _                 ____  ____   _____                
-         / ____| |               |  _ \|  _ \ / ____|                 
-        | |    | |__   __ _ _ __ | |_) | |_) | (___                    
-        | |    | '_ \ / _` | '_ \|  _ <|  _ < \___ \                   
-        | |____| | | | (_| | | | | |_) | |_) |____) |                 
-         \_____|_| |_|\__,_|_| |_|____/|____/|_____/                
-                                                                     
+    welcome_banner = "https://lainchan.org/static/lain_banner1.png"
+
+    # Stock Messages
+    welcome_message = '''
                                                                       
+  _               _____ _   _  _____ _    _          _   _ ____  ____   _____ 
+ | |        /\   |_   _| \ | |/ ____| |  | |   /\   | \ | |  _ \|  _ \ / ____|
+ | |       /  \    | | |  \| | |    | |__| |  /  \  |  \| | |_) | |_) | (___  
+ | |      / /\ \   | | | . ` | |    |  __  | / /\ \ | . ` |  _ <|  _ < \___ \ 
+ | |____ / ____ \ _| |_| |\  | |____| |  | |/ ____ \| |\  | |_) | |_) |____) |
+ |______/_/    \_\_____|_| \_|\_____|_|  |_/_/    \_\_| \_|____/|____/|_____/ 
                                                                       
-\x1b[0m
+'''
+
+    welcome_help_text = '''
 New to the server? Here's a quick guide:
-	lb                      - List all the available boards
-	lt <boardID>            - List the threads for a board
-        ei/di                   - Enable/Disable the showing of images
+        b                      - List all the available boards
+        t <boardID>            - List the threads for a board
+        ei/di                  - Enable/Disable the showing of images
 
 If you need additional help or examples, try help <command>.
 '''
-    prompt = "chanBBS> "
+    prompt = "lainchanbbs> "
     continue_prompt = "Press any key to continue..."
 
-
-    ## Server Configuration
-    ##-----------------------------------
+    # Server Configuration
     server = "0.0.0.0"
     port = 5000
     loggingLevel = logging.INFO
 
-    ## OFFLINE DEVELOPMENT MODE
-    ##-----------------------------------
+    # OFFLINE DEVELOPMENT MODE
     offline_mode = False
 
-    ## Board list
-    ##-----------------------------------
+    # Board list
     board_list = './data/boards.json'
