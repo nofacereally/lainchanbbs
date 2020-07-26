@@ -6,10 +6,10 @@ from colors import color
 import logging
 
 from telnetsrv.telnetsrvlib import command
-from threaded_telnet_handler import ThreadedTelnetHandler
+from paged_telnet_handler import PagedTelnetHandler
 
 
-class TelnetBBS(ThreadedTelnetHandler):
+class TelnetBBS(PagedTelnetHandler):
     WELCOME = config.welcome_message
     PROMPT = config.prompt
     CONTINUE_PROMPT = config.continue_prompt
@@ -18,7 +18,6 @@ class TelnetBBS(ThreadedTelnetHandler):
     formatter = PostFormatter()
     logger = logging.getLogger('')
 
-    "A telnet server handler using Threading"
     def __init__(self, request, client_address, server):
         # BBS setup
         self.current_board = ""
@@ -29,12 +28,13 @@ class TelnetBBS(ThreadedTelnetHandler):
         self.encoding = "latin-1"
         self.aspect_ratio = 0.61
         self.user_width = 80
-        self.page_size = 24
 
-        ThreadedTelnetHandler.__init__(self, request, client_address, server)
+        self.logger.setLevel(logging.DEBUG)
+
+        PagedTelnetHandler.__init__(self, request, client_address, server)
 
     def setup(self):
-        ThreadedTelnetHandler.setup(self)
+        PagedTelnetHandler.setup(self)
 
         self.encoding = "utf-8"
 
@@ -44,10 +44,8 @@ class TelnetBBS(ThreadedTelnetHandler):
         else:
             self.WELCOME = self.WELCOME + config.welcome_help_text
 
-        self.page_size = self.HEIGHT - 2
-
     def finish(self):
-        super().finish(self)
+        PagedTelnetHandler.finish(self)
         pass
 
     def writehline(self):
@@ -59,8 +57,10 @@ class TelnetBBS(ThreadedTelnetHandler):
 
     def session_start(self):
         self.logger.info("Session started.")
+        self.flush(True)
 
     def session_end(self):
+        self.flush(True)
         self.logger.info("Session ended.")
 
     @command('listboards')
@@ -79,6 +79,8 @@ class TelnetBBS(ThreadedTelnetHandler):
 
         self.writehline()
 
+        self.flush()
+
     @command('listthreads')
     @command('lt')
     def command_listthreads(self, params):
@@ -90,12 +92,14 @@ class TelnetBBS(ThreadedTelnetHandler):
 
         if (len(params) == 0):
             self.write_user_message('Missing argument.')
+            self.flush()
             return
 
         board = params[0]
 
         if not self.is_valid_board(board):
             self.write_user_message('That board is not known.')
+            self.flush()
             return
 
         self.current_board = params[0]
@@ -105,6 +109,7 @@ class TelnetBBS(ThreadedTelnetHandler):
                 self.current_page = int(params[1]) - 1
             except ValueError:
                 self.write_user_message("Invalid page number.")
+                self.flush()
                 return
 
         print_page = True
@@ -112,6 +117,8 @@ class TelnetBBS(ThreadedTelnetHandler):
         while True:
             if print_page:
                 self.print_current_page()
+
+            self.flush()
 
             command = self.readline(prompt='(enter) next, (p)rev, # read, (q)uit: ')
 
@@ -124,11 +131,12 @@ class TelnetBBS(ThreadedTelnetHandler):
 
                 if self.current_page < 0:
                     self.write_user_message("No more threads.")
+                    self.flush()
+
                     self.current_page = 0
                     print_page = False
 
             elif command.lower() == 'q':
-                self.PROMPT = config.prompt
                 break
             else:
                 try:
@@ -136,6 +144,8 @@ class TelnetBBS(ThreadedTelnetHandler):
                     self.read_replies()
                 except ValueError:
                     self.write_user_message("Invalid thead number.")
+                    self.flush()
+
                     print_page = False
 
     @command('readreplies')
@@ -150,12 +160,14 @@ class TelnetBBS(ThreadedTelnetHandler):
         if params is not None:
             if len(params) < 2:
                 self.write_user_message("Board name and thread number are required.")
+                self.flush()
                 return
 
             board = params[0]
 
             if not self.is_valid_board(board):
                 self.write_user_message("That board is not known.")
+                self.flush()
                 return
 
             self.current_board = board
@@ -164,12 +176,14 @@ class TelnetBBS(ThreadedTelnetHandler):
                 self.current_thread = int(params[1])
             except ValueError:
                 self.write_user_message("Invalid thread number.")
+                self.flush()
                 return
 
         try:
             posts = self.chan_server.getReplies(self.current_board, self.current_thread)['posts']
         except Exception:
             self.writeerror('Communication error or invalid board and/or thread number.')
+            self.flush()
             return
 
         show_post = True
@@ -187,6 +201,7 @@ class TelnetBBS(ThreadedTelnetHandler):
 
             if error:
                 self.write_user_message("No more posts.")
+                self.flush()
                 continue
 
             if show_post:
@@ -205,6 +220,8 @@ class TelnetBBS(ThreadedTelnetHandler):
                 )
 
             show_post = True
+
+            self.flush()
 
             command = self.readline(prompt='(enter) next, (p)rev, (# #..) view threads, (f)irst, (l)ast, (i)mage, (q)uit: ')
 
@@ -241,6 +258,8 @@ class TelnetBBS(ThreadedTelnetHandler):
 
                 self.writeline("")
 
+                self.flush()
+
                 show_post = False
             else:
                 try:
@@ -264,13 +283,19 @@ class TelnetBBS(ThreadedTelnetHandler):
                                     self.get_width()
                                 )
                             )
+
+                            self.flush()
                         except Exception:
                             self.write_user_message("Post number not found.")
+                            self.flush()
+
                             show_post = False
                             break
 
                 except ValueError:
                     self.write_user_message("Invalid post number.")
+                    self.flush()
+
                     show_post = False
 
     def print_current_page(self):
@@ -319,6 +344,8 @@ class TelnetBBS(ThreadedTelnetHandler):
 
         self.showImages = True
 
+        self.flush()
+
     @command('disableimages')
     @command('di')
     def command_disableimages(self, params):
@@ -331,6 +358,8 @@ class TelnetBBS(ThreadedTelnetHandler):
 
         self.showImages = False
 
+        self.flush()
+
     @command('ar')
     def command_aspectratio(self, params):
         '''<number>
@@ -339,10 +368,12 @@ class TelnetBBS(ThreadedTelnetHandler):
         '''
         if len(params) == 0:
             self.write_user_message(f"Current aspect ratio: {self.aspect_ratio}")
+            self.flush()
             return
 
         if len(params) != 1:
             self.write_user_message("Missing aspect ratio.")
+            self.flush()
             return
 
         try:
@@ -355,11 +386,13 @@ class TelnetBBS(ThreadedTelnetHandler):
                 raise ValueError
         except ValueError:
             self.write_user_message("Invalid aspect ratio. Expected a value between 0.0 and 1.0.")
+            self.flush()
             return
 
         self.aspect_ratio = ar
 
         self.write_user_message(f"Aspect ratio set to {ar}.")
+        self.flush()
 
         return
 
@@ -376,15 +409,19 @@ class TelnetBBS(ThreadedTelnetHandler):
             index = int(params[0])
         except Exception:
             self.write_user_message("Not a valid number.")
+            self.flush()
             return
 
         try:
             banner_url = config.banners[index]
         except Exception:
             self.write_user_message("Banner number is not known.")
+            self.flush()
             return
 
         self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.get_width(), self.HEIGHT, self.aspect_ratio))
+
+        self.flush()
 
     def is_valid_board(self, board):
         data = self.chan_server.getBoards()
@@ -422,6 +459,8 @@ class TelnetBBS(ThreadedTelnetHandler):
                     )
                 )
 
+                self.flush()
+
                 return
             else:
                 self.writeline("Command '%s' not known" % cmd)
@@ -438,6 +477,7 @@ class TelnetBBS(ThreadedTelnetHandler):
 
             if method.__doc__ is None:
                 self.writeline("no help for command %s" % method)
+                self.flush()
                 return
 
             doc = method.__doc__.split("\n")
@@ -456,6 +496,8 @@ class TelnetBBS(ThreadedTelnetHandler):
                 )
             )
 
+        self.flush()
+
     @command('minibanner')
     @command('mb')
     def command_minibanner(self, params):
@@ -467,9 +509,12 @@ class TelnetBBS(ThreadedTelnetHandler):
             banner_url = config.mini_banner_url
         except Exception:
             self.write_user_message("Mini banner is not configured.")
+            self.flush()
             return
 
         self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.get_width(), self.HEIGHT, self.aspect_ratio))
+
+        self.flush()
 
     @command('pagesize')
     @command('ps')
@@ -480,10 +525,12 @@ class TelnetBBS(ThreadedTelnetHandler):
         """
         if len(params) == 0:
             self.write_user_message(f"Paging set at {self.page_size} lines.")
+            self.flush()
             return
 
         if len(params) < 1:
             self.write_user_message("You need to enter a page size.")
+            self.flush()
             return
 
         try:
@@ -496,11 +543,14 @@ class TelnetBBS(ThreadedTelnetHandler):
                 raise Exception
         except Exception:
             self.write_user_message("Invalid page size")
+            self.flush()
             return
 
         self.page_size = ps
 
         self.write_user_message(f"Page size set to {self.page_size} lines.")
+
+        self.flush()
 
     @command('width')
     @command('w')
@@ -511,10 +561,12 @@ class TelnetBBS(ThreadedTelnetHandler):
         """
         if len(params) == 0:
             self.write_user_message(f"Width set at {self.user_width} characters.")
+            self.flush()
             return
 
         if len(params) < 1:
             self.write_user_message("Width in characters is required.")
+            self.flush()
             return
 
         try:
@@ -527,11 +579,14 @@ class TelnetBBS(ThreadedTelnetHandler):
                 raise Exception
         except Exception:
             self.write_user_message("Invalid width.")
+            self.flush()
             return
 
         self.user_width = w
 
         self.write_user_message(f"Width set to {self.user_width} characters.")
+
+        self.flush()
 
     def get_width(self):
         if self.WIDTH is not None:

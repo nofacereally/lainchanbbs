@@ -56,7 +56,7 @@ e     eeeee e  eeeee eeee e   e eeeee eeeee\x1b[31;1m 8    8   8    8   8     \x
     welcome_help_text = '''For help, type help. For additional help, try help <command>.
 '''
     prompt = "lainchanbbs> "
-    continue_prompt = "Press any key to continue..."
+    continue_prompt = "Enter to continue: "
 
     # Server Configuration
     server = "0.0.0.0"
