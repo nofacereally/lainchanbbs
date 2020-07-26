@@ -587,8 +587,10 @@ class TelnetBBS(PagedTelnetHandler):
         self.flush()
 
     def get_width(self):
-        if self.WIDTH and self.WIDTH is not None:
-            return self.WIDTH
+        try:
+            return int(self.WIDTH)
+        except Exception:
+            self.logger.info("WIDTH unknown. Defaulting to user_width.")
 
         return self.user_width
 
