@@ -11,16 +11,6 @@ import logging
 
 from telnetsrv.telnetsrvlib import TelnetHandlerBase, command
 
-from enum import Enum
-
-
-class BBSState(Enum):
-    WELCOME = 1
-    BASE = 2
-    THREADS = 3
-    REPLIES = 4
-    BYE = 5
-
 
 class TelnetBBS(TelnetHandlerBase):
     WELCOME = config.welcome_message
