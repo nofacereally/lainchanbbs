@@ -121,8 +121,13 @@ class TelnetBBS(TelnetHandlerBase):
     def writehline(self):
         self.writeline(self.formatter.get_hline('blue'))
 
-    @command(['listboards', 'lb'])
+    @command('listboards')
+    @command('lb')
     def command_listboards(self, params):
+        '''
+        List the boards on lainchan.
+        This command lists all known boards on lainchan that have a compatible API.
+        '''
         data = self.chan_server.getBoards()
 
         self.writehline()
@@ -132,8 +137,13 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.writehline()
 
-    @command(['listthreads', 'lt'])
+    @command('listthreads')
+    @command('lt')
     def command_listthreads(self, params):
+        '''<board name> <page>
+        Lists the threads on a board.
+        This command lists the page of threads on a board. Omitting page will start at page 1.
+        '''
         self.current_thread = 0
 
         if (len(params) == 0):
@@ -191,7 +201,6 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeline("")
                     print_page = False
 
-    @command(['readreplies', 'rr'])
     def read_replies(self, params=None):
         self.current_post = 0
 
@@ -363,10 +372,12 @@ class TelnetBBS(TelnetHandlerBase):
         self.writeline(f'Page {self.current_page + 1}')
         self.writeline('')
 
-    @command(['enableimages', 'ei'])
+    @command('enableimages')
+    @command('ei')
     def command_enableimages(self, params):
         '''
-        Enables showing images in posts.
+        Enables showing images in posts globally.
+        Turns on showing images in threads globally.
 
         '''
         self.writeline("Images have been enabled.")
@@ -374,10 +385,12 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.showImages = True
 
-    @command(['disableimages', 'di'])
+    @command('disableimages')
+    @command('di')
     def command_disableimages(self, params):
         '''
         Disables showing images in posts.
+        Turns off showing images in threads globally. You can still see them with 'i'.
 
         '''
         self.writeline("Images have been disabled.")
@@ -385,8 +398,12 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.showImages = False
 
-    @command(['aspectratio', 'ar'])
-    def command_aspectration(self, params):
+    @command('ar')
+    def command_aspectratio(self, params):
+        '''<number>
+        Displays or sets the font aspect ratio.
+        Change this to match your font aspect ratio so image rendering looks better.
+        '''
         if len(params) == 0:
             self.writeresponse(f"Current aspect ratio: {self.aspect_ratio}")
             self.writeresponse("")
@@ -417,8 +434,13 @@ class TelnetBBS(TelnetHandlerBase):
 
         return
 
-    @command(['banner', 'b'])
+    @command('banner')
+    @command('b')
     def command_banner(self, params):
+        '''<banner number>
+        Displays the banner assigned to that number.
+        Useful for sneaking up on your font aspect ratio.
+        '''
         index = 0
 
         try:
