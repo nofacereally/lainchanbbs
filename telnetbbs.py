@@ -41,6 +41,7 @@ class TelnetBBS(TelnetHandlerBase):
         self.showImages = False
         self.encoding = "latin-1"
         self.aspect_ratio = 0.61
+        self.page_size = 24
 
         # This is the cooked input stream (list of charcodes)
         self.cookedq = []
@@ -71,6 +72,8 @@ class TelnetBBS(TelnetHandlerBase):
             self.WELCOME = self.WELCOME + config.mini_welcome_help_text
         else:
             self.WELCOME = self.WELCOME + config.welcome_help_text
+
+        self.page_size = self.HEIGHT - 2
 
     def finish(self):
         '''Called as the session is ending'''
@@ -544,4 +547,39 @@ class TelnetBBS(TelnetHandlerBase):
             return
 
         self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
+        self.writeline("")
+
+    @command('pagesize')
+    @command('ps')
+    def command_pagesize(self, params):
+        """<number of lines>
+        Sets the number of lines to print before pausing.
+        It's like less or more.
+        """
+        if len(params) == 0:
+            self.writeline(f"Paging set at {self.page_size} lines.")
+            self.writeline("")
+            return
+
+        if len(params) < 1:
+            self.writeline("You need to enter a page size.")
+            self.writeline("")
+            return
+
+        try:
+            ps = int(params[0])
+
+            if ps < 1:
+                raise Exception
+
+            if ps > 256:
+                raise Exception
+        except Exception:
+            self.writeline("Invalid page size")
+            self.writeline("")
+            return
+
+        self.page_size = ps
+
+        self.writeline(f"Page size set to {self.page_size} lines.")
         self.writeline("")
