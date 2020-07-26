@@ -12,6 +12,7 @@ class PagedTelnetHandler(ThreadedTelnetHandler):
 
         self.output_queue = []
         self.page_size = 24
+        self.paging = True
 
     # -- Threaded output handling functions --
     def writemessage(self, text):
@@ -27,7 +28,7 @@ class PagedTelnetHandler(ThreadedTelnetHandler):
         if len(self.output_queue) == 0:
             return
 
-        if len(self.output_queue) > self.page_size:
+        if len(self.output_queue) > self.page_size and self.paging:
             output_lines = []
 
             output_lines = self.output_queue[0:self.page_size]

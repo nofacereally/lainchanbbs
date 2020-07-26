@@ -591,3 +591,18 @@ class TelnetBBS(PagedTelnetHandler):
             return self.WIDTH
 
         return self.user_width
+
+    @command('paging')
+    def command_paging(self, params):
+        """
+        Toggle paging on and off.
+        Execute this command to turn paging on and off.
+        """
+        self.paging = not self.paging
+
+        if self.paging:
+            self.write_user_message("Paging is now on.")
+        else:
+            self.write_user_message("Paging is now off.")
+
+        self.flush()
