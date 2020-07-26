@@ -465,6 +465,8 @@ class TelnetBBS(TelnetHandlerBase):
 
         board_names = [b['board'] for b in data['boards']]
 
+        board_names.append('lain')
+
         return board.lower() in board_names
 
     def cmdHELP(self, params):
