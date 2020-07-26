@@ -30,7 +30,7 @@ class PagedTelnetHandler(ThreadedTelnetHandler):
         if len(self.output_queue) > self.page_size:
             output_lines = []
 
-            output_lines = self.output_queue[0:self.page_size - 1]
+            output_lines = self.output_queue[0:self.page_size]
             self.output_queue = self.output_queue[self.page_size:]
 
             output = '\n'.join(output_lines)
