@@ -42,8 +42,6 @@ class TelnetBBS(TelnetHandlerBase):
         self.encoding = "latin-1"
         self.aspect_ratio = 0.61
 
-        self.WELCOME = self.WELCOME + config.welcome_help_text
-
         # This is the cooked input stream (list of charcodes)
         self.cookedq = []
 
@@ -67,6 +65,12 @@ class TelnetBBS(TelnetHandlerBase):
         time.sleep(0.5)
 
         self.encoding = "utf-8"
+
+        if self.WIDTH < 80:
+            self.WELCOME = "lainchanBBS_"
+            self.WELCOME = self.WELCOME + config.mini_welcome_help_text
+        else:
+            self.WELCOME = self.WELCOME + config.welcome_help_text
 
     def finish(self):
         '''Called as the session is ending'''
@@ -201,7 +205,13 @@ class TelnetBBS(TelnetHandlerBase):
                     self.writeline("")
                     print_page = False
 
+    @command('readreplies')
+    @command('rr')
     def read_replies(self, params=None):
+        """<board> <thread>
+        Reads the board and thread.
+        Loads the thread from the board and reads as if you browsed through LT.
+        """
         self.current_post = 0
 
         if params is not None:
