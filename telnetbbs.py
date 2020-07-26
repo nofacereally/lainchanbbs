@@ -58,7 +58,7 @@ class TelnetBBS(TelnetHandlerBase):
 
         self.encoding = "utf-8"
 
-        if self.WIDTH < 80:
+        if self.get_width() < 80:
             self.WELCOME = "lainchanBBS_"
             self.WELCOME = self.WELCOME + config.mini_welcome_help_text
         else:
@@ -266,7 +266,7 @@ class TelnetBBS(TelnetHandlerBase):
                         self.showImages,
                         'blue',
                         None,
-                        self.WIDTH
+                        self.get_width()
                     )
                 )
 
@@ -297,7 +297,7 @@ class TelnetBBS(TelnetHandlerBase):
                             post,
                             self.current_board,
                             self.chan_server,
-                            self.WIDTH,
+                            self.get_width(),
                             self.HEIGHT,
                             self.aspect_ratio
                         )
@@ -327,7 +327,7 @@ class TelnetBBS(TelnetHandlerBase):
                                     self.showImages,
                                     'yellow',
                                     None,
-                                    self.WIDTH
+                                    self.get_width()
                                 )
                             )
                         except Exception:
@@ -450,7 +450,7 @@ class TelnetBBS(TelnetHandlerBase):
             self.write_user_message("Banner number is not known.")
             return
 
-        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
+        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.get_width(), self.HEIGHT, self.aspect_ratio))
 
     def is_valid_board(self, board):
         data = self.chan_server.getBoards()
@@ -535,7 +535,7 @@ class TelnetBBS(TelnetHandlerBase):
             self.write_user_message("Mini banner is not configured.")
             return
 
-        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
+        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.get_width(), self.HEIGHT, self.aspect_ratio))
 
     @command('pagesize')
     @command('ps')
@@ -598,3 +598,9 @@ class TelnetBBS(TelnetHandlerBase):
         self.user_width = w
 
         self.write_user_message(f"Width set to {self.user_width} characters.")
+
+    def get_width(self):
+        if self.WIDTH is not None:
+            return self.WIDTH
+
+        return self.user_width
