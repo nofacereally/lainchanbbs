@@ -41,6 +41,7 @@ class TelnetBBS(TelnetHandlerBase):
         self.showImages = False
         self.encoding = "latin-1"
         self.aspect_ratio = 0.61
+        self.user_width = 80
         self.page_size = 24
 
         # This is the cooked input stream (list of charcodes)
@@ -128,6 +129,16 @@ class TelnetBBS(TelnetHandlerBase):
     def writehline(self):
         self.writeline(self.formatter.get_hline('blue'))
 
+    def write_user_message(self, text):
+        self.writeline(text)
+        self.writeline("")
+
+    def session_start(self):
+        self.logger.info("Session started.")
+
+    def session_end(self):
+        self.logger.info("Session ended.")
+
     @command('listboards')
     @command('lb')
     def command_listboards(self, params):
@@ -154,15 +165,13 @@ class TelnetBBS(TelnetHandlerBase):
         self.current_thread = 0
 
         if (len(params) == 0):
-            self.writeerror('Missing argument.')
-            self.writeerror('')
+            self.write_user_message('Missing argument.')
             return
 
         board = params[0]
 
         if not self.is_valid_board(board):
-            self.writeerror('That board is not known.')
-            self.writeerror('')
+            self.write_user_message('That board is not known.')
             return
 
         self.current_board = params[0]
@@ -171,8 +180,7 @@ class TelnetBBS(TelnetHandlerBase):
             try:
                 self.current_page = int(params[1]) - 1
             except ValueError:
-                self.writeerror("Invalid page number.")
-                self.writeerror("")
+                self.write_user_message("Invalid page number.")
                 return
 
         print_page = True
@@ -191,8 +199,7 @@ class TelnetBBS(TelnetHandlerBase):
                 self.current_page = self.current_page - 1
 
                 if self.current_page < 0:
-                    self.writeerror("No more threads.")
-                    self.writeerror("")
+                    self.write_user_message("No more threads.")
                     self.current_page = 0
                     print_page = False
 
@@ -204,8 +211,7 @@ class TelnetBBS(TelnetHandlerBase):
                     self.current_thread = int(command)
                     self.read_replies()
                 except ValueError:
-                    self.writeerror("Invalid thead number.")
-                    self.writeline("")
+                    self.write_user_message("Invalid thead number.")
                     print_page = False
 
     @command('readreplies')
@@ -219,15 +225,13 @@ class TelnetBBS(TelnetHandlerBase):
 
         if params is not None:
             if len(params) < 2:
-                self.writeerror("Board name and thread number are required.")
-                self.writeerror("")
+                self.write_user_message("Board name and thread number are required.")
                 return
 
             board = params[0]
 
             if not self.is_valid_board(board):
-                self.writeerror("That board is not known.")
-                self.writeerror("")
+                self.write_user_message("That board is not known.")
                 return
 
             self.current_board = board
@@ -235,8 +239,7 @@ class TelnetBBS(TelnetHandlerBase):
             try:
                 self.current_thread = int(params[1])
             except ValueError:
-                self.writeerror("Invalid thread number.")
-                self.writeerror("")
+                self.write_user_message("Invalid thread number.")
                 return
 
         try:
@@ -259,8 +262,7 @@ class TelnetBBS(TelnetHandlerBase):
                 error = True
 
             if error:
-                self.writeerror("No more posts.")
-                self.writeerror("")
+                self.write_user_message("No more posts.")
                 continue
 
             if show_post:
@@ -313,7 +315,7 @@ class TelnetBBS(TelnetHandlerBase):
                 else:
                     self.writeline("There is no image on this post.")
 
-                self.writeresponse("")
+                self.writeline("")
 
                 show_post = False
             else:
@@ -339,27 +341,23 @@ class TelnetBBS(TelnetHandlerBase):
                                 )
                             )
                         except Exception:
-                            self.writeerror("Post number not found.")
-                            self.writeerror("")
+                            self.write_user_message("Post number not found.")
                             show_post = False
                             break
 
                 except ValueError:
-                    self.writeerror("Invalid post number.")
-                    self.writeerror("")
+                    self.write_user_message("Invalid post number.")
                     show_post = False
 
     def print_current_page(self):
         try:
             thread_result = self.chan_server.getThreads(self.current_board, self.current_page)
         except Exception:
-            self.writeerror('Communication error or invalid board and/or thread number.')
-            self.writeerror("")
+            self.write_user_message('Communication error or invalid board and/or thread number.')
             return
 
         if isinstance(thread_result, str):
-            self.writeline('No more threads or bad thread number.')
-            self.writeline('')
+            self.write_user_message('No more threads or bad thread number.')
             return
 
         threads = thread_result['threads']
@@ -382,8 +380,8 @@ class TelnetBBS(TelnetHandlerBase):
             self.writeline(header)
 
         self.writehline()
-        self.writeline(f'Page {self.current_page + 1}')
-        self.writeline('')
+
+        self.write_user_message(f'Page {self.current_page + 1}')
 
     @command('enableimages')
     @command('ei')
@@ -393,8 +391,7 @@ class TelnetBBS(TelnetHandlerBase):
         Turns on showing images in threads globally.
 
         '''
-        self.writeline("Images have been enabled.")
-        self.writeline("")
+        self.write_user_message("Images have been enabled.")
 
         self.showImages = True
 
@@ -406,8 +403,7 @@ class TelnetBBS(TelnetHandlerBase):
         Turns off showing images in threads globally. You can still see them with 'i'.
 
         '''
-        self.writeline("Images have been disabled.")
-        self.writeline("")
+        self.write_user_message("Images have been disabled.")
 
         self.showImages = False
 
@@ -418,13 +414,11 @@ class TelnetBBS(TelnetHandlerBase):
         Change this to match your font aspect ratio so image rendering looks better.
         '''
         if len(params) == 0:
-            self.writeresponse(f"Current aspect ratio: {self.aspect_ratio}")
-            self.writeresponse("")
+            self.write_user_message(f"Current aspect ratio: {self.aspect_ratio}")
             return
 
         if len(params) != 1:
-            self.writeerror("Missing aspect ratio.")
-            self.writeerror("")
+            self.write_user_message("Missing aspect ratio.")
             return
 
         try:
@@ -436,14 +430,12 @@ class TelnetBBS(TelnetHandlerBase):
             if ar > 1.0:
                 raise ValueError
         except ValueError:
-            self.writeerror("Invalid aspect ratio. Expected a value between 0.0 and 1.0.")
-            self.writeerror("")
+            self.write_user_message("Invalid aspect ratio. Expected a value between 0.0 and 1.0.")
             return
 
         self.aspect_ratio = ar
 
-        self.writeresponse(f"Aspect ratio set to {ar}.")
-        self.writeresponse("")
+        self.write_user_message(f"Aspect ratio set to {ar}.")
 
         return
 
@@ -459,19 +451,16 @@ class TelnetBBS(TelnetHandlerBase):
         try:
             index = int(params[0])
         except Exception:
-            self.writeline("Not a valid number.")
-            self.writeline("")
+            self.write_user_message("Not a valid number.")
             return
 
         try:
             banner_url = config.banners[index]
         except Exception:
-            self.writeline("Banner number is not known.")
-            self.writeline("")
+            self.write_user_message("Banner number is not known.")
             return
 
-        self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
-        self.writeline("")
+        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
 
     def is_valid_board(self, board):
         data = self.chan_server.getBoards()
@@ -482,21 +471,25 @@ class TelnetBBS(TelnetHandlerBase):
 
         return board.lower() in board_names
 
-    def cmdHELP(self, params):
+    @command('help')
+    @command('?')
+    def command_help(self, params):
         """[<command>]
         Display help
-        Display either brief help on all commands, or detailed
-        help on a single command passed as a parameter.
+        Display either brief help on all commands, or detailed help on a single command passed as a parameter.
         """
         if params:
             cmd = params[0].upper()
+
             if cmd in self.COMMANDS:
                 method = self.COMMANDS[cmd]
                 doc = method.__doc__.split("\n")
                 docp = doc[0].strip()
                 docl = '\n'.join([l.strip() for l in doc[2:]])
+
                 if not docl.strip():  # If there isn't anything here, use line 1
                     docl = doc[1].strip()
+
                 self.writeline(
                     "%s %s\n\n%s" % (
                         cmd,
@@ -504,33 +497,40 @@ class TelnetBBS(TelnetHandlerBase):
                         docl,
                     )
                 )
+
                 return
             else:
                 self.writeline("Command '%s' not known" % cmd)
         else:
             self.writeline("Help on built in commands\n")
+
         keys = sorted(self.COMMANDS.keys())
+
         for cmd in keys:
             method = self.COMMANDS[cmd]
+
             if getattr(method, 'hidden', False):
                 continue
+
             if method.__doc__ is None:
                 self.writeline("no help for command %s" % method)
                 return
+
             doc = method.__doc__.split("\n")
             docp = doc[0].strip()
             docs = doc[1].strip()
+
             if len(docp) > 0:
                 docps = "%s - %s" % (docp, docs, )
             else:
                 docps = "- %s" % (docs, )
+
             self.writeline(
                 "%s %s" % (
                     cmd,
                     docps,
                 )
             )
-    cmdHELP.aliases = ['?']
 
     @command('minibanner')
     @command('mb')
@@ -542,12 +542,10 @@ class TelnetBBS(TelnetHandlerBase):
         try:
             banner_url = config.mini_banner_url
         except Exception:
-            self.writeline("Mini banner is not configured.")
-            self.writeline("")
+            self.write_user_message("Mini banner is not configured.")
             return
 
-        self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
-        self.writeline("")
+        self.write_user_message(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
 
     @command('pagesize')
     @command('ps')
@@ -557,13 +555,11 @@ class TelnetBBS(TelnetHandlerBase):
         It's like less or more.
         """
         if len(params) == 0:
-            self.writeline(f"Paging set at {self.page_size} lines.")
-            self.writeline("")
+            self.write_user_message(f"Paging set at {self.page_size} lines.")
             return
 
         if len(params) < 1:
-            self.writeline("You need to enter a page size.")
-            self.writeline("")
+            self.write_user_message("You need to enter a page size.")
             return
 
         try:
@@ -575,11 +571,40 @@ class TelnetBBS(TelnetHandlerBase):
             if ps > 256:
                 raise Exception
         except Exception:
-            self.writeline("Invalid page size")
-            self.writeline("")
+            self.write_user_message("Invalid page size")
             return
 
         self.page_size = ps
 
-        self.writeline(f"Page size set to {self.page_size} lines.")
-        self.writeline("")
+        self.write_user_message(f"Page size set to {self.page_size} lines.")
+
+    @command('width')
+    @command('w')
+    def command_width(self, params):
+        """<width of screen>"
+        Sets or shows the width of your screen.
+        Called without parameters, shows the width value. With a number, sets it.
+        """
+        if len(params) == 0:
+            self.write_user_message(f"Width set at {self.user_width} characters.")
+            return
+
+        if len(params) < 1:
+            self.write_user_message("Width in characters is required.")
+            return
+
+        try:
+            w = int(params[0])
+
+            if w < 1:
+                raise Exception
+
+            if w > 256:
+                raise Exception
+        except Exception:
+            self.write_user_message("Invalid width.")
+            return
+
+        self.user_width = w
+
+        self.write_user_message(f"Width set to {self.user_width} characters.")
