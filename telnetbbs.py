@@ -29,8 +29,6 @@ class TelnetBBS(PagedTelnetHandler):
         self.aspect_ratio = 0.61
         self.user_width = 80
 
-        self.logger.setLevel(logging.DEBUG)
-
         PagedTelnetHandler.__init__(self, request, client_address, server)
 
     def setup(self):
