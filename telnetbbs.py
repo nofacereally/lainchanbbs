@@ -516,3 +516,20 @@ class TelnetBBS(TelnetHandlerBase):
                 )
             )
     cmdHELP.aliases = ['?']
+
+    @command('minibanner')
+    @command('mb')
+    def command_minibanner(self, params):
+        """
+        Displays the mini banner as ASCII text.
+        Call the random mini banner on lainchan and converts it to ASCII. It's random and cached so it won't refresh every call.
+        """
+        try:
+            banner_url = config.mini_banner_url
+        except Exception:
+            self.writeline("Mini banner is not configured.")
+            self.writeline("")
+            return
+
+        self.writeline(self.chan_server.getAndConvertImage(banner_url, self.WIDTH, self.HEIGHT, self.aspect_ratio))
+        self.writeline("")

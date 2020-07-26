@@ -68,3 +68,6 @@ e     eeeee e  eeeee eeee e   e eeeee eeeee\x1b[31;1m 8    8   8    8   8     \x
 
     # Board list
     board_list = './data/boards.json'
+
+    # mini banner url
+    mini_banner_url = "http://lainchan.org/b.php"
