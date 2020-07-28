@@ -70,7 +70,7 @@ e     eeeee e  eeeee eeee e   e eeeee eeeee\x1b[31;1m 8    8   8    8   8     \x
     board_list = './data/boards.json'
 
     # mini banner url
-    mini_banner_url = "http://lainchan.org/b.php"
+    mini_banner_url = "https://lainchan.org/b.php"
 
     # mini help
     mini_welcome_help_text = "For help, type help.\n\rSmall screen support WIP."

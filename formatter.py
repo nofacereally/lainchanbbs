@@ -67,7 +67,15 @@ class PostFormatter():
             if images:
                 lines.append(self.format_post_image(post, board, chan_server))
             else:
-                lines.append(chan_server.getThumbNailURL(board, post['tim'], '.png'))
+                lines.append(
+                    chan_server.getThumbNailURL(
+                        board,
+                        post['tim'],
+                        post['ext'],
+                        post['tn_w'],
+                        post['tn_h']
+                    )
+                )
 
         lines.append("")
 
@@ -88,7 +96,16 @@ class PostFormatter():
         lines = []
 
         if 'tim' in post.keys():
-            img = chan_server.getThumbNail(board, post['tim'], '.png', w, h, ar)
+            img = chan_server.getThumbNail(
+                board,
+                post['tim'],
+                post['ext'],
+                post['tn_w'],
+                post['tn_h'],
+                w,
+                h,
+                ar
+            )
 
             if img:
                 lines.append(img)

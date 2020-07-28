@@ -72,11 +72,14 @@ class ChanServer:
 
         return data
 
-    def getThumbNail(self, board, imgID, ext, w=80, h=24, ar=0.61):
+    def getThumbNail(self, board, imgID, ext, tn_w, tn_h, w=80, h=24, ar=0.61):
         # Get thumbnail for a post
-        url = self.getThumbNailURL(board, imgID, ext)
+        url = self.getThumbNailURL(board, imgID, ext, tn_w, tn_h)
 
-        return self.getAndConvertImage(url, w, h, ar)
+        if self.isSupportedExt(ext):
+            return self.getAndConvertImage(url, w, h, ar)
+        else:
+            return url
 
     @cached(cache=LRUCache(maxsize=100))
     def getAndConvertImage(self, url, width=80, height=24, ar=0.61):
@@ -92,8 +95,13 @@ class ChanServer:
 
         return img
 
-    def getThumbNailURL(self, board, imgID, ext):
-        return f"{self.base_url}/{str(board)}/thumb/{str(imgID)}{ext}"
+    def getThumbNailURL(self, board, imgID, ext, tn_w, tn_h):
+
+        # Could be a spoiler, link to a different image.
+        if tn_h == 128 and tn_w == 128:
+            return f"{self.base_url}/{str(board)}/src/{str(imgID)}{ext}"
+        else:
+            return f"{self.base_url}/{str(board)}/thumb/{str(imgID)}{ext}"
 
     @cached(cache=TTLCache(maxsize=1024, ttl=120))
     def queryApi(self, api_url):
@@ -114,3 +122,13 @@ class ChanServer:
         data = json.loads(response.text)
 
         return data
+
+    def isSupportedExt(self, ext):
+        extensions = [
+            '.png',
+            '.jpg',
+            '.jpeg',
+            '.gif',
+        ]
+
+        return ext.lower() in extensions
